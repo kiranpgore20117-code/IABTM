@@ -39,7 +39,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [potentialHours, setPotentialHours] = useState(2);
 
-  // Feature 5: Continuous Camera & 6s Distraction Fun Refresher State
+  // Feature 5: Continuous Camera & Distraction Refresher State (Auto-popup interval removed to avoid constant annoyance)
   const [boredomAlert, setBoredomAlert] = useState(false);
   const [engagementScore, setEngagementScore] = useState(94);
   const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
@@ -60,9 +60,8 @@ export default function App() {
     }
   };
 
-  // Automatically start webcam when dashboard opens
+  // Automatically start webcam when dashboard opens (Random automatic popups removed)
   useEffect(() => {
-    let interval;
     if (view === 'dashboard') {
       const startCameraAutomatically = async () => {
         try {
@@ -80,24 +79,9 @@ export default function App() {
       };
 
       startCameraAutomatically();
-
-      // Interval check time limit set to 6 seconds
-      interval = setInterval(() => {
-        const randomEvent = Math.random();
-        if (randomEvent > 0.5) {
-          setBoredomAlert(true);
-          setFunnyChallengeActive(true);
-          setTimeLeft(20);
-          setEngagementScore(prev => Math.max(50, prev - 20));
-          speakMessage("Hey buddy! You look totally distracted! Let's take a quick 20 second funny brain break right now!");
-        } else {
-          setBoredomAlert(false);
-        }
-      }, 6000);
     }
 
     return () => {
-      clearInterval(interval);
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
         mediaStreamRef.current = null;
@@ -360,12 +344,26 @@ export default function App() {
               </div>
             </div>
 
-            <button 
-              onClick={() => setShowSimulateModal(true)} 
-              style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
-            >
-              Simulate Disruption
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => {
+                  setBoredomAlert(true);
+                  setFunnyChallengeActive(true);
+                  setTimeLeft(20);
+                  setEngagementScore(prev => Math.max(50, prev - 10));
+                  speakMessage("Manual focus check initiated. Let's take a quick 20 second brain break!");
+                }} 
+                style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Test Alert
+              </button>
+              <button 
+                onClick={() => setShowSimulateModal(true)} 
+                style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Simulate Disruption
+              </button>
+            </div>
           </div>
 
           {/* SIMULATION MODAL */}
