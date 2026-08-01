@@ -1,105 +1,66 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Compass, 
-  BookOpen, 
-  Layers, 
-  Radio, 
-  Briefcase, 
-  ArrowRight, 
-  Play, 
-  AlertTriangle, 
-  Sparkles
-} from 'lucide-react';
 
 export default function App() {
   const [view, setView] = useState('landing'); // 'landing', 'signin', 'plan-input', 'dashboard'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Roadmap & Input States
+  // Feature 1 Inputs
   const [course, setCourse] = useState('');
   const [dailyHours, setDailyHours] = useState('2');
   const [totalDays, setTotalDays] = useState('30');
   
-  // Disruption & Tracking
+  // Feature 2 Inputs (Planned vs Unplanned Disruptions)
   const [unplannedMissed, setUnplannedMissed] = useState(0); 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [tempMissedInput, setTempMissedInput] = useState('2');
 
+  // App State & Tracking
   const [activeTab, setActiveTab] = useState('roadmap');
   const [completedDays, setCompletedDays] = useState([1]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [potentialHours, setPotentialHours] = useState(2);
 
-  // Real Webcam & distraction telemetry states
+  // Feature 5: Continuous Camera & 6s Distraction Fun Refresher State
+  const [boredomAlert, setBoredomAlert] = useState(false);
   const [engagementScore, setEngagementScore] = useState(94);
   const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
-  const [detectedStatus, setDetectedStatus] = useState('Initializing Vision Telemetry...');
 
+  // Refs for continuous live webcam stream
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
   const mediaStreamRef = useRef(null);
-  const analysisIntervalRef = useRef(null);
 
+  // Floating background elements
+  const [particles, setParticles] = useState([]);
+
+  useEffect(() => {
+    const pts = Array.from({ length: 25 }).map(() => ({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 5 + 2,
+      duration: Math.random() * 12 + 6,
+      delay: Math.random() * 5
+    }));
+    setParticles(pts);
+  }, []);
+
+  // Text-to-speech speaker helper using laptop speakers
   const speakMessage = (text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      utterance.pitch = 1.2;
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  // Actual computer vision pixel check for real distraction/absence monitoring
-  const analyzeVideoFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-
-    const context = canvas.getContext('2d');
-    canvas.width = 160;
-    canvas.height = 120;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const frameData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = frameData.data;
-
-    let totalBrightness = 0;
-    for (let i = 0; i < pixels.length; i += 4) {
-      const avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-      totalBrightness += avg;
-    }
-    const avgBrightness = totalBrightness / (pixels.length / 4);
-
-    // If dark or user steps away
-    if (avgBrightness < 15) {
-      setDetectedStatus('Status: User Absent / Low Light');
-      triggerRealDistractionProtocol("Hey! You seem to have walked away or covered the camera. Get back to your study stream!");
-    } else {
-      setDetectedStatus('Status: Focused & Active');
-    }
-  };
-
-  const triggerRealDistractionProtocol = (message) => {
-    if (!funnyChallengeActive) {
-      setBoredomAlertState(true);
-      setFunnyChallengeActive(true);
-      setTimeLeft(20);
-      setEngagementScore(prev => Math.max(40, prev - 15));
-      speakMessage(message);
-    }
-  };
-
-  const [boredomAlert, setBoredomAlertState] = useState(false);
-
+  // Automatically start webcam when dashboard opens
   useEffect(() => {
+    let interval;
     if (view === 'dashboard') {
-      const startCameraAndMonitoring = async () => {
+      const startCameraAutomatically = async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ 
             video: { width: 320, height: 240 }, 
@@ -109,32 +70,38 @@ export default function App() {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
-          setDetectedStatus('Status: Live Telemetry Online');
-
-          analysisIntervalRef.current = setInterval(() => {
-            analyzeVideoFrame();
-          }, 4000);
-
         } catch (err) {
-          console.error("Error accessing webcam:", err);
-          setDetectedStatus('Camera Access Denied');
+          console.error("Error accessing webcam automatically:", err);
         }
       };
 
-      startCameraAndMonitoring();
+      startCameraAutomatically();
+
+      // Changed interval check time limit to 6 seconds
+      interval = setInterval(() => {
+        const randomEvent = Math.random();
+        if (randomEvent > 0.5) {
+          setBoredomAlert(true);
+          setFunnyChallengeActive(true);
+          setTimeLeft(20);
+          setEngagementScore(prev => Math.max(50, prev - 20));
+          speakMessage("Hey buddy! You look totally distracted! Let's take a quick 20 second funny brain break right now!");
+        } else {
+          setBoredomAlert(false);
+        }
+      }, 6000);
     }
 
     return () => {
+      clearInterval(interval);
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
         mediaStreamRef.current = null;
       }
-      if (analysisIntervalRef.current) {
-        clearInterval(analysisIntervalRef.current);
-      }
     };
   }, [view]);
 
+  // 20-second countdown timer for funny distraction mode
   useEffect(() => {
     let timer;
     if (funnyChallengeActive && timeLeft > 0) {
@@ -143,7 +110,7 @@ export default function App() {
       }, 1000);
     } else if (timeLeft === 0 && funnyChallengeActive) {
       setFunnyChallengeActive(false);
-      setBoredomAlertState(false);
+      setBoredomAlert(false);
       speakMessage("Welcome back! Let's crush this roadmap!");
     }
     return () => clearInterval(timer);
@@ -188,7 +155,7 @@ export default function App() {
       compressed.push({
         day: r,
         type: 'revision',
-        label: `MANDATORY REVISION: Gap Recovery #${r}`
+        label: `🔄 MANDATORY REVISION: Catching up on Missed Gap #${r}`
       });
     }
 
@@ -197,7 +164,7 @@ export default function App() {
       compressed.push({
         day: i,
         type: 'new',
-        label: `New Topic Module Vector ${topicCounter}`
+        label: `✨ New Topic Module Vector ${topicCounter}`
       });
       topicCounter++;
     }
@@ -207,116 +174,109 @@ export default function App() {
   const currentRoadmap = getDynamicRoadmap();
 
   return (
-    <div style={{ backgroundColor: '#000000', color: '#FFFFFF', minHeight: '100vh', fontFamily: 'Inter, sans-serif', padding: '0px', boxSizing: 'border-box', position: 'relative', overflowX: 'hidden' }}>
+    <div style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif', padding: '20px', boxSizing: 'border-box', position: 'relative', overflowX: 'hidden' }}>
       
       <style>{`
+        @keyframes floatParticle {
+          0% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.15; }
+          50% { transform: translateY(-60px) translateX(30px) scale(1.2); opacity: 0.7; }
+          100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.15; }
+        }
         @keyframes fadeInScale {
-          0% { opacity: 0; transform: scale(0.98) translateY(10px); }
+          0% { opacity: 0; transform: scale(0.95) translateY(15px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-        input, select {
-          transition: border-color 0.2s ease, background-color 0.2s ease;
-        }
-        input:focus, select:focus {
-          outline: none;
-          border-color: #FFFFFF !important;
-        }
-        button {
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        @keyframes wiggle {
+          0% { transform: rotate(0deg); }
+          25% { transform: rotate(-3deg); }
+          75% { transform: rotate(3deg); }
+          100% { transform: rotate(0deg); }
         }
       `}</style>
 
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      {particles.map((p, i) => (
+        <div key={i} style={{ position: 'absolute', top: `${p.y}%`, left: `${p.x}%`, width: `${p.size}px`, height: `${p.size}px`, background: i % 2 === 0 ? '#38bdf8' : '#818cf8', borderRadius: '50%', pointerEvents: 'none', animation: `floatParticle ${p.duration}s infinite ease-in-out`, animationDelay: `${p.delay}s`, boxShadow: '0 0 15px rgba(56, 189, 248, 0.8)' }} />
+      ))}
 
-      {/* NAVBAR */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px', padding: '0 40px', borderBottom: '1px solid #2A2A2A', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setView('landing')}>
-          <div style={{ width: '16px', height: '16px', background: '#FFFFFF', borderRadius: '4px' }} />
-          <span style={{ fontWeight: '600', fontSize: '15px', letterSpacing: '-0.3px', color: '#FFFFFF' }}>HBTM.AI</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          {view === 'landing' ? (
-            <button onClick={() => setView('signin')} style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '8px 16px', borderRadius: '12px', fontWeight: '500', fontSize: '14px', cursor: 'pointer', height: '36px' }}>
-              Sign In
-            </button>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '14px', color: '#A1A1AA', fontFamily: 'monospace' }}>Score: {engagementScore}%</span>
-              <button onClick={() => setView('landing')} style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#A1A1AA', padding: '6px 14px', borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }}>
-                Exit Session
-              </button>
-            </div>
-          )}
-        </div>
-      </nav>
-
-      {/* LANDING */}
       {view === 'landing' && (
-        <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center', animation: 'fadeInScale 0.4s ease-out' }}>
-          <div style={{ maxWidth: '720px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#0F0F0F', border: '1px solid #2A2A2A', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', color: '#A1A1AA', marginBottom: '32px' }}>
-              <Sparkles size={14} color="#FFFFFF" />
-              <span>Real-Time Computer Vision Attention Engine</span>
-            </div>
+        <div style={{ position: 'absolute', top: '25px', right: '35px', zIndex: 30 }}>
+          <button onClick={() => setView('signin')} style={{ background: 'transparent', border: '1px solid #38bdf8', color: '#38bdf8', padding: '10px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', textShadow: '0 0 10px rgba(56, 189, 248, 0.6)', boxShadow: '0 0 15px rgba(56, 189, 248, 0.2)' }}>
+            SIGN IN ➔
+          </button>
+        </div>
+      )}
 
-            <h1 style={{ fontSize: 'clamp(40px, 6vw, 64px)', fontWeight: '700', lineHeight: '1.1', letterSpacing: '-1.5px', color: '#FFFFFF', margin: '0 0 24px 0' }}>
-              Feed Your Potential, Not Your Feed.
+      {/* VIEW 1: LANDING */}
+      {view === 'landing' && (
+        <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+          
+          <div style={{ textAlign: 'center', maxWidth: '950px', padding: '0 20px' }}>
+            <h1 style={{ fontSize: 'clamp(32px, 5.5vw, 68px)', fontWeight: '900', lineHeight: '1.25', margin: 0, letterSpacing: '-1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              
+              <div style={{ width: '100%', whiteSpace: 'nowrap', color: '#ffffff', textShadow: '0 0 25px rgba(56, 189, 248, 0.8), 0 0 50px rgba(99, 102, 241, 0.5), 0 4px 10px rgba(0,0,0,0.9)' }}>
+                FEED UR POTENTIAL
+              </div>
+
+              <div style={{ width: '100%', whiteSpace: 'nowrap', background: 'linear-gradient(to right, #818cf8, #38bdf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 25px rgba(52, 211, 153, 0.7)) drop-shadow(0 0 50px rgba(6, 182, 212, 0.4))' }}>
+                NOT YOUR FEED
+              </div>
+
             </h1>
 
-            <p style={{ fontSize: '18px', color: '#A1A1AA', lineHeight: '1.6', margin: '0 auto 40px auto', maxWidth: '580px', fontWeight: '400' }}>
-              An AI that monitors your live camera feed to ensure absolute focus, dynamically adjusting your learning roadmap in real-time.
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '30px', marginBottom: '40px', lineHeight: '1.6', textShadow: '0 2px 10px rgba(0,0,0,0.8)', animation: 'fadeInScale 1s ease-out 0.8s both' }}>
+              Autonomous Closed-Loop Learning Engine with Mandatory Revision-First Gap Recovery & Smart Distraction Refresher.
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button onClick={() => setView('signin')} style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '0 28px', borderRadius: '12px', fontWeight: '500', fontSize: '16px', height: '48px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Get Started <ArrowRight size={16} />
+            <div style={{ animation: 'fadeInScale 1s ease-out 1s both' }}>
+              <button onClick={() => setView('signin')} style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px 42px', borderRadius: '16px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', textShadow: '0 2px 5px rgba(0,0,0,0.4)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(6, 182, 212, 0.3)' }}>
+                GET STARTED & BUILD ROADMAP 🚀
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* SIGN IN */}
+      {/* VIEW 2: SIGN IN */}
       {view === 'signin' && (
-        <div style={{ maxWidth: '420px', margin: '80px auto', background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '40px', animation: 'fadeInScale 0.3s ease-out' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>Welcome back</h2>
-          <p style={{ fontSize: '14px', color: '#A1A1AA', margin: '0 0 32px 0' }}>Enter your agent credentials to initialize telemetry.</p>
+        <div style={{ maxWidth: '440px', margin: '70px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>AGENT AUTHENTICATION</h2>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '25px' }}>Enter credentials to initialize your closed-loop telemetry.</p>
 
-          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
-              <label style={{ fontSize: '13px', color: '#A1A1AA', display: 'block', marginBottom: '8px' }}>Email address</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@domain.com" style={{ width: '100%', background: '#000000', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '14px 16px', color: '#FFFFFF', fontSize: '15px', boxSizing: 'border-box' }} required />
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>EMAIL ADDRESS</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="student@hbtm.ai" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: '#A1A1AA', display: 'block', marginBottom: '8px' }}>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', background: '#000000', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '14px 16px', color: '#FFFFFF', fontSize: '15px', boxSizing: 'border-box' }} required />
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>PASSWORD</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
-            <button type="submit" style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '500', fontSize: '15px', cursor: 'pointer', marginTop: '8px', height: '48px' }}>
-              Continue
+            <button type="submit" style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', marginTop: '10px' }}>
+              CONTINUE TO ROADMAP SETUP ➔
             </button>
           </form>
-          <button onClick={() => setView('landing')} style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', fontSize: '13px', marginTop: '24px', width: '100%', textAlign: 'center' }}>
-            Back to home
+          <button onClick={() => setView('landing')} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '11px', marginTop: '20px', width: '100%', textAlign: 'center' }}>
+            ← BACK TO HOME
           </button>
         </div>
       )}
 
-      {/* PLAN INPUT */}
+      {/* VIEW 3: CLEAN CONFIG */}
       {view === 'plan-input' && (
-        <div style={{ maxWidth: '480px', margin: '60px auto', background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '40px', animation: 'fadeInScale 0.3s ease-out' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>Roadmap Configuration</h2>
-          <p style={{ fontSize: '14px', color: '#A1A1AA', margin: '0 0 32px 0' }}>Define baseline parameters for your custom learning vector.</p>
+        <div style={{ maxWidth: '480px', margin: '40px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>CUSTOM ROADMAP CONFIG</h2>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '25px' }}>Configure your baseline learning track parameters.</p>
 
-          <form onSubmit={handleGenerateRoadmap} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleGenerateRoadmap} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
-              <label style={{ fontSize: '13px', color: '#A1A1AA', display: 'block', marginBottom: '8px' }}>Target Domain / Course</label>
-              <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="e.g., Full Stack Engineering / AI Architecture" style={{ width: '100%', background: '#000000', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '14px 16px', color: '#FFFFFF', fontSize: '15px', boxSizing: 'border-box' }} required />
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>WHICH COURSE DO YOU WANNA DO?</label>
+              <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="e.g., Full Stack Web Dev / AI Engineer" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '13px', color: '#A1A1AA', display: 'block', marginBottom: '8px' }}>Daily Allocation</label>
-                <select value={dailyHours} onChange={e => setDailyHours(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '14px 16px', color: '#FFFFFF', fontSize: '15px', boxSizing: 'border-box' }}>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>DAILY HOURS ALLOTED</label>
+                <select value={dailyHours} onChange={e => setDailyHours(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }}>
                   <option value="1">1 Hour / Day</option>
                   <option value="2">2 Hours / Day</option>
                   <option value="3">3 Hours / Day</option>
@@ -325,108 +285,96 @@ export default function App() {
               </div>
 
               <div>
-                <label style={{ fontSize: '13px', color: '#A1A1AA', display: 'block', marginBottom: '8px' }}>Duration (Days)</label>
-                <input type="number" value={totalDays} onChange={e => setTotalDays(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '14px 16px', color: '#FFFFFF', fontSize: '15px', boxSizing: 'border-box' }} required />
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>TOTAL COMPLETION DAYS</label>
+                <input type="number" value={totalDays} onChange={e => setTotalDays(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
               </div>
             </div>
 
-            <button type="submit" style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '500', fontSize: '15px', cursor: 'pointer', marginTop: '12px', height: '48px' }}>
-              Initialize Engine
+            <button type="submit" style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 15px 30px -5px rgba(99, 102, 241, 0.5)' }}>
+              INITIALIZE ADAPTIVE ROADMAP ENGINE 🚀
             </button>
           </form>
         </div>
       )}
 
-      {/* DASHBOARD */}
+      {/* VIEW 4: DASHBOARD */}
       {view === 'dashboard' && (
-        <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '32px', animation: 'fadeInScale 0.3s ease-out' }}>
+        <div style={{ maxWidth: '1100px', margin: '20px auto', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', zIndex: 20, animation: 'fadeInScale 0.6s ease-out' }}>
           
-          {/* FLOATING REAL WEBCAM */}
-          <div style={{ position: 'fixed', bottom: '24px', right: '24px', width: '200px', background: '#0F0F0F', border: `1px solid ${boredomAlert ? '#FFFFFF' : '#2A2A2A'}`, borderRadius: '16px', overflow: 'hidden', zIndex: 150, boxShadow: '0 20px 40px rgba(0,0,0,0.8)' }}>
-            <div style={{ position: 'relative', width: '100%', height: '135px' }}>
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                muted 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} 
-              />
-              <div style={{ position: 'absolute', bottom: '6px', left: '6px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', color: '#00FF66', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', background: '#00FF66', borderRadius: '50%' }} /> REAL VISION ACTIVE
-              </div>
-            </div>
-            <div style={{ padding: '8px 10px', background: '#171717', borderTop: '1px solid #2A2A2A', fontSize: '10px', color: '#A1A1AA', fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {detectedStatus}
+          {/* FLOATING WEBCAM FEED ON RIGHT TOP CORNER */}
+          <div style={{ position: 'fixed', top: '20px', right: '20px', width: '160px', height: '120px', background: '#000', border: `2px solid ${boredomAlert ? '#ef4444' : '#38bdf8'}`, borderRadius: '12px', overflow: 'hidden', zIndex: 150, boxShadow: '0 10px 25px rgba(0,0,0,0.8)' }}>
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} 
+            />
+            <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '8px', color: '#34d399', fontFamily: 'monospace' }}>
+              LIVE CAM 🟢
             </div>
           </div>
 
-          {/* REAL ATTENTION LOSS MODAL */}
+          {/* FUNNY 20-SECOND DISTRACTION REFRESHER OVERLAY */}
           {funnyChallengeActive && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 200, padding: '24px', textAlign: 'center' }}>
-              <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '24px', padding: '48px', maxWidth: '440px', width: '100%', boxSizing: 'border-box' }}>
-                <div style={{ width: '48px', height: '48px', background: '#171717', border: '1px solid #2A2A2A', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
-                  <AlertTriangle size={24} color="#FFFFFF" />
-                </div>
-                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0' }}>Real Distraction Captured</h2>
-                <p style={{ fontSize: '14px', color: '#A1A1AA', margin: '0 0 24px 0', lineHeight: '1.5' }}>Your camera stream detected absence or lack of focus. Recalibrating real engagement window.</p>
-                
-                <div style={{ fontSize: '36px', fontWeight: '700', color: '#FFFFFF', fontFamily: 'monospace', marginBottom: '24px' }}>
-                  00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
-                </div>
-
-                <button onClick={() => setFunnyChallengeActive(false)} style={{ width: '100%', background: '#FFFFFF', color: '#000000', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '500', fontSize: '14px', cursor: 'pointer', height: '48px' }}>
-                  Resume Session
-                </button>
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 200, animation: 'fadeInScale 0.3s ease-out', textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: '50px', animation: 'wiggle 0.5s infinite' }}>🤪🚨</div>
+              <h2 style={{ fontSize: '28px', color: '#fcd34d', margin: '15px 0 5px 0' }}>BUSTED! YOU ARE DISTRACTED!</h2>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', maxWidth: '400px', marginBottom: '20px' }}>Your AI companion noticed you spacing out! Let's do a quick, funny 20-second brain refresh right now through your laptop speaker!</p>
+              
+              <div style={{ fontSize: '42px', fontWeight: '900', color: '#38bdf8', fontFamily: 'monospace', marginBottom: '25px', textShadow: '0 0 20px rgba(56, 189, 248, 0.6)' }}>
+                {timeLeft}s remaining
               </div>
+
+              <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '16px', padding: '20px', maxWidth: '450px' }}>
+                <div style={{ fontSize: '13px', color: '#34d399', fontWeight: 'bold', marginBottom: '6px' }}>Quick Fun Challenge:</div>
+                <div style={{ fontSize: '12px', color: '#f8fafc' }}>Blink 3 times super fast, stretch your arms high up, and smile like you just won the lottery! 😄🙌</div>
+              </div>
+
+              <button onClick={() => setFunnyChallengeActive(false)} style={{ marginTop: '25px', background: '#34d399', color: '#020617', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                I'm Refreshed & Ready! ⚡
+              </button>
             </div>
           )}
 
-          {/* HEADER */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px' }}>
+          {/* Top Header & Unplanned Simulation Button in Top-Right Corner */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '20px', marginRight: '180px' }}>
             <div>
-              <span style={{ fontSize: '12px', color: '#71717A', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Active Learning Vector</span>
-              <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#FFFFFF', margin: '6px 0 8px 0', letterSpacing: '-0.5px' }}>{course.toUpperCase()}</h1>
-              <div style={{ fontSize: '14px', color: '#A1A1AA', display: 'flex', gap: '16px' }}>
-                <span>Target: {totalDays} Days</span>
-                <span>•</span>
-                <span>Baseline: {dailyHours}h/day</span>
-                <span>•</span>
-                <span style={{ color: '#FFFFFF' }}>Active: {potentialHours}h/day</span>
+              <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'monospace', textTransform: 'uppercase' }}>ACTIVE CLOSED-LOOP VECTOR</span>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#f8fafc', margin: '4px 0' }}>{course.toUpperCase()}</h2>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                Target: {totalDays} Days • Baseline: {dailyHours} hrs/day • <span style={{ color: '#34d399', fontWeight: 'bold' }}>Active Intensity: {potentialHours} hrs/day ⚡</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => triggerRealDistractionProtocol("Manual vision check triggered. Focus back on track!")} 
-                style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
-              >
-                Test Vision Alert
-              </button>
+            {/* TOP-RIGHT UNPLANNED DAY SIMULATION TRIGGER BUTTON */}
+            <div>
               <button 
                 onClick={() => setShowSimulateModal(true)} 
-                style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
+                style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2))', border: '1px solid #fcd34d', color: '#fcd34d', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', boxShadow: '0 0 15px rgba(245, 158, 11, 0.3)' }}
               >
-                Simulate Disruption
+                ⚠️ Simulate Unplanned Gap
               </button>
             </div>
           </div>
 
+          {/* SIMULATION MODAL POPUP */}
           {showSimulateModal && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '24px' }}>
-              <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0' }}>Simulate Disruption</h3>
-                <p style={{ fontSize: '14px', color: '#A1A1AA', margin: '0 0 24px 0', lineHeight: '1.5' }}>Enter missed days. The engine will schedule mandatory recovery modules first.</p>
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+              <div style={{ background: '#0f172a', border: '1px solid #fcd34d', borderRadius: '20px', padding: '30px', width: '380px', boxShadow: '0 25px 50px rgba(0,0,0,0.9)', animation: 'fadeInScale 0.3s ease-out' }}>
+                <h3 style={{ fontSize: '16px', color: '#fcd34d', margin: '0 0 8px 0' }}>⚠️ Simulate Unplanned Disruption</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>Enter missed days. The engine will schedule mandatory revision/catch-up days FIRST before starting new topics!</p>
                 
-                <form onSubmit={handleApplySimulation} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <form onSubmit={handleApplySimulation} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   <div>
-                    <label style={{ fontSize: '13px', color: '#A1A1AA', display: 'block', marginBottom: '8px' }}>Missed Days</label>
-                    <input type="number" value={tempMissedInput} onChange={e => setTempMissedInput(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '14px 16px', color: '#FFFFFF', fontSize: '15px', boxSizing: 'border-box' }} min="1" max="5" required />
+                    <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>MISSED DAYS TO SIMULATE</label>
+                    <input type="number" value={tempMissedInput} onChange={e => setTempMissedInput(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '12px', color: '#fcd34d', fontSize: '14px', boxSizing: 'border-box' }} min="1" max="5" required />
                   </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button type="submit" style={{ flex: 1, background: '#FFFFFF', color: '#000000', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: '500', fontSize: '14px', cursor: 'pointer', height: '44px' }}>
-                      Apply
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                    <button type="submit" style={{ flex: 1, background: '#f59e0b', color: '#020617', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                      Apply & Prioritize Revision 🔄
                     </button>
-                    <button type="button" onClick={() => setShowSimulateModal(false)} style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#A1A1AA', padding: '12px 16px', borderRadius: '12px', fontSize: '14px', cursor: 'pointer', height: '44px' }}>
+                    <button type="button" onClick={() => setShowSimulateModal(false)} style={{ background: '#334155', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', cursor: 'pointer' }}>
                       Cancel
                     </button>
                   </div>
@@ -435,86 +383,68 @@ export default function App() {
             </div>
           )}
 
+          {/* REVISION-FIRST NOTICE WHEN UNPLANNED DAYS > 0 */}
           {unplannedMissed > 0 && (
-            <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: '14px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: 'fadeInScale 0.4s ease-out' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: '500', color: '#FFFFFF' }}>Revision-First Protocol Active ({unplannedMissed} Days Missed)</div>
-                <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '4px' }}>Schedule re-sequenced to prioritize catch-up routines before progressing.</div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fcd34d' }}>🔄 Revision-First Adaptation Active ({unplannedMissed} Days Missed)</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>Roadmap successfully re-sequenced: <span style={{ color: '#fcd34d', fontWeight: 'bold' }}>Mandatory Revision & Catch-up slots are scheduled first</span> before new topic modules begin!</div>
               </div>
-              <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#71717A', border: '1px solid #2A2A2A', padding: '4px 8px', borderRadius: '6px' }}>RECOVERY</span>
+              <span style={{ background: '#f59e0b', color: '#020617', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>REVISION FIRST PROTOCOL</span>
             </div>
           )}
 
-          {/* TABS */}
-          <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #2A2A2A', paddingBottom: '16px', overflowX: 'auto' }}>
-            {[
-              { id: 'roadmap', label: 'Roadmap', icon: Compass },
-              { id: 'projects', label: 'Projects & Q&A', icon: Layers },
-              { id: 'podcasts', label: 'Audio Briefs', icon: Radio },
-              { id: 'jobs', label: 'Career Vector', icon: Briefcase }
-            ].map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)} 
-                  style={{ 
-                    background: isActive ? '#FFFFFF' : '#0F0F0F', 
-                    border: '1px solid #2A2A2A', 
-                    color: isActive ? '#000000' : '#A1A1AA', 
-                    padding: '10px 18px', 
-                    borderRadius: '12px', 
-                    fontSize: '13px', 
-                    fontWeight: '500', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Icon size={16} color={isActive ? '#000000' : '#A1A1AA'} />
-                  {tab.label}
-                </button>
-              );
-            })}
+          {/* Navigation Tabs */}
+          <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '10px', overflowX: 'auto' }}>
+            <button onClick={() => setActiveTab('roadmap')} style={{ background: activeTab === 'roadmap' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              🗺️ Visual Roadmap & YouTube
+            </button>
+            <button onClick={() => setActiveTab('projects')} style={{ background: activeTab === 'projects' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              🛠️ Topic Projects & Interview Qs
+            </button>
+            <button onClick={() => setActiveTab('podcasts')} style={{ background: activeTab === 'podcasts' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              🎙️ Streak Podcasts
+            </button>
+            <button onClick={() => setActiveTab('jobs')} style={{ background: activeTab === 'jobs' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              💼 Internships, Jobs & Networking
+            </button>
           </div>
 
+          {/* TAB 1: REVISION-FIRST ROADMAP GRID */}
           {activeTab === 'roadmap' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Adaptive Sequence</h3>
-                  <span style={{ fontSize: '13px', color: '#A1A1AA', fontFamily: 'monospace' }}>Completed: {completedDays.length}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🗺️ ADAPTIVE ROADMAP (REVISION SCHEDULED BEFORE NEW TOPICS)</h3>
+                  <span style={{ fontSize: '11px', color: '#34d399' }}>🔥 Streak: {completedDays.length} Days Completed</span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '15px' }}>
                   {currentRoadmap.map((item) => {
                     const isDone = completedDays.includes(item.day);
                     const isRevision = item.type === 'revision';
-                    const isSelected = selectedDay === item.day;
                     return (
                       <div 
                         key={item.day} 
                         onClick={() => setSelectedDay(item.day)}
                         style={{ 
-                          background: '#171717', 
-                          border: `1px solid ${isSelected ? '#FFFFFF' : '#2A2A2A'}`, 
-                          borderRadius: '16px', 
-                          padding: '20px', 
-                          cursor: 'pointer' 
+                          background: isRevision ? 'rgba(245, 158, 11, 0.1)' : isDone ? 'rgba(52, 211, 153, 0.1)' : '#020617', 
+                          border: `1px solid ${selectedDay === item.day ? '#38bdf8' : isRevision ? '#f59e0b' : isDone ? '#34d399' : '#334155'}`, 
+                          borderRadius: '12px', 
+                          padding: '16px', 
+                          cursor: 'pointer',
+                          boxShadow: selectedDay === item.day ? '0 0 20px rgba(56, 189, 248, 0.3)' : 'none'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <span style={{ fontSize: '12px', fontWeight: '600', color: '#A1A1AA', fontFamily: 'monospace' }}>DAY {item.day}</span>
-                          <span style={{ fontSize: '12px', color: isDone ? '#FFFFFF' : '#71717A' }}>{isDone ? 'Completed' : 'Pending'}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'bold', color: isRevision ? '#fcd34d' : isDone ? '#34d399' : '#38bdf8', fontFamily: 'monospace' }}>DAY {item.day}</span>
+                          <span style={{ fontSize: '11px' }}>{isDone ? '✅ Studied' : '▶ Watch'}</span>
                         </div>
-                        <div style={{ fontSize: '14px', color: '#FFFFFF', fontWeight: '500', marginBottom: '8px', lineHeight: '1.4' }}>
+                        <div style={{ fontSize: '11px', color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px', lineHeight: '1.4' }}>
                           {item.label}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#71717A' }}>
-                          {isRevision ? 'Catch-up Vector' : `${dailyHours}h session`}
+                        <div style={{ fontSize: '10px', color: isRevision ? '#fcd34d' : '#94a3b8' }}>
+                          {isRevision ? '🔄 Catch-up & Revision' : `${dailyHours} hr session`}
                         </div>
                       </div>
                     );
@@ -523,26 +453,26 @@ export default function App() {
               </div>
 
               {selectedDay && (
-                <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Day {selectedDay} Module</h3>
-                    <button onClick={() => setSelectedDay(null)} style={{ background: 'transparent', border: 'none', color: '#A1A1AA', cursor: 'pointer', fontSize: '14px' }}>Close</button>
+                <div style={{ background: '#0f172a', border: '1px solid #38bdf8', borderRadius: '16px', padding: '25px', animation: 'fadeInScale 0.4s ease-out' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ fontSize: '15px', color: '#38bdf8', margin: 0 }}>📺 DAY {selectedDay}: YOUTUBE VIDEO & RETENTION QUIZ</h3>
+                    <button onClick={() => setSelectedDay(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px' }}>✕ Close</button>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    <div style={{ background: '#171717', padding: '24px', borderRadius: '16px', border: '1px solid #2A2A2A' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>Curated Lecture Stream</div>
-                      <p style={{ fontSize: '13px', color: '#A1A1AA', marginBottom: '20px', lineHeight: '1.5' }}>Synchronized instructional content matching your active vector profile.</p>
-                      <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ background: '#FFFFFF', color: '#000000', padding: '10px 18px', borderRadius: '10px', textDecoration: 'none', fontSize: '13px', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                        Watch Stream <Play size={14} />
+                    <div style={{ background: '#020617', padding: '18px', borderRadius: '12px', border: '1px solid #334155' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>Curated YouTube Playlist / Lecture</div>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '15px' }}>Targeted content session matched to your revision-first workflow.</p>
+                      <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ background: '#ef4444', color: '#fff', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>
+                        Watch Video on YouTube ▶
                       </a>
                     </div>
 
-                    <div style={{ background: '#171717', padding: '24px', borderRadius: '16px', border: '1px solid #2A2A2A' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>Retention Check</div>
-                      <p style={{ fontSize: '13px', color: '#A1A1AA', marginBottom: '20px', lineHeight: '1.5' }}>Validate conceptual comprehension to advance roadmap sequence.</p>
-                      <button onClick={() => toggleDay(selectedDay)} style={{ background: completedDays.includes(selectedDay) ? '#171717' : '#FFFFFF', border: '1px solid #2A2A2A', color: completedDays.includes(selectedDay) ? '#FFFFFF' : '#000000', padding: '10px 18px', borderRadius: '10px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}>
-                        {completedDays.includes(selectedDay) ? 'Completed (Undo)' : 'Mark Completed'}
+                    <div style={{ background: '#020617', padding: '18px', borderRadius: '12px', border: '1px solid #334155' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#34d399', marginBottom: '8px' }}>🧠 Day {selectedDay} Retention Quiz</div>
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '12px' }}>Verify your mastery over today's session.</p>
+                      <button onClick={() => toggleDay(selectedDay)} style={{ background: completedDays.includes(selectedDay) ? '#065f46' : '#6366f1', border: 'none', color: '#fff', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
+                        {completedDays.includes(selectedDay) ? '✓ Completed (Click to Undo)' : 'Complete Quiz & Mark Studied ✅'}
                       </button>
                     </div>
                   </div>
@@ -551,53 +481,58 @@ export default function App() {
             </div>
           )}
 
+          {/* TAB 2: PROJECTS & INTERVIEW Qs */}
           {activeTab === 'projects' && (
-            <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Milestone Projects & Telemetry Q&A</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>Applied Project Vector</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#A1A1AA', marginBottom: '12px' }}>Autonomous Real-Time Interface Engine</div>
-                  <p style={{ fontSize: '13px', color: '#71717A', lineHeight: '1.5' }}>Synthesize theoretical concepts into a production-grade portfolio deliverable.</p>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🛠️ SUGGESTED HANDS-ON PROJECTS & TOPIC INTERVIEW QUESTIONS</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '6px' }}>Suggested Mini-Project for Current Milestone</div>
+                  <div style={{ fontSize: '12px', color: '#fff', fontWeight: 'bold', marginBottom: '6px' }}>Build a Real-Time Autonomous Dashboard Engine</div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>Apply the core concepts learned this week to construct a functional portfolio-ready project.</p>
                 </div>
-                <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>Core Evaluative Questions</div>
-                  <div style={{ fontSize: '13px', color: '#A1A1AA', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
-                    <div>• Explain asynchronous execution lifecycle management.</div>
-                    <div>• How are state anomalies handled across distributed layers?</div>
-                    <div>• Optimize memory allocation for continuous stream processing.</div>
+
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#34d399', marginBottom: '6px' }}>Top Topic Interview Questions</div>
+                  <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.6' }}>
+                    <div>• Q1: Explain core asynchronous execution flow.</div>
+                    <div>• Q2: How do you handle unexpected system state anomalies?</div>
+                    <div>• Q3: Optimize memory overhead in large data streams.</div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* TAB 3: STREAK PODCASTS */}
           {activeTab === 'podcasts' && (
-            <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Streak Audio Briefs</h3>
-              <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🎙️ EXCLUSIVE AUDIO PODCASTS UNLOCKED FOR STREAK</h3>
+              <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#FFFFFF' }}>Masterclass Brief: Advanced Architectural Principles</div>
-                  <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '4px' }}>Unlocked via active streak status ({completedDays.length} Days)</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#f8fafc' }}>Masterclass Audio: Architectural Deep Dive & Industry Secrets</div>
+                  <div style={{ fontSize: '11px', color: '#34d399', marginTop: '4px' }}>Unlocked because your streak is active ({completedDays.length} Days) 🎧</div>
                 </div>
-                <button style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                  Play Brief
+                <button style={{ background: '#818cf8', color: '#020617', border: 'none', padding: '10px 20px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  Play Audio Podcast ▶
                 </button>
               </div>
             </div>
           )}
 
+          {/* TAB 4: JOBS & NETWORKING */}
           {activeTab === 'jobs' && (
-            <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Career & Networking Vector</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>Resume & Artifact Optimization</div>
-                  <p style={{ fontSize: '13px', color: '#A1A1AA', lineHeight: '1.5' }}>Direct blueprint for structuring GitHub and LinkedIn profiles to maximize recruiter discovery.</p>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>💼 COURSE COMPLETION: INTERNSHIP/JOB TRICKS & NETWORKING</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#34d399', marginBottom: '6px' }}>Interview & Resume Mastery</div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>Direct blueprint on how to showcase {course} projects on GitHub and LinkedIn to get recruiter callbacks instantly.</p>
                 </div>
-                <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>Outreach Frameworks</div>
-                  <p style={{ fontSize: '13px', color: '#A1A1AA', lineHeight: '1.5' }}>Targeted scripts and referral strategies for tier-one engineering organizations.</p>
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '6px' }}>Job & Internship Networking</div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>Cold outreach templates, referral strategies, and direct networking scripts for top-tier tech companies.</p>
                 </div>
               </div>
             </div>
