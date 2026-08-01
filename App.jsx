@@ -48,10 +48,10 @@ export default function App() {
   // Text-to-speech speaker helper using laptop speakers
   const speakMessage = (text) => {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Stop previous speech
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
-      utterance.pitch = 1.2; // Slightly funny high pitch
+      utterance.pitch = 1.2;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -77,7 +77,6 @@ export default function App() {
 
       startCameraAutomatically();
 
-      // Trigger distraction check loop every 12 seconds
       interval = setInterval(() => {
         const randomEvent = Math.random();
         if (randomEvent > 0.6) {
@@ -85,8 +84,6 @@ export default function App() {
           setFunnyChallengeActive(true);
           setTimeLeft(20);
           setEngagementScore(prev => Math.max(50, prev - 20));
-          
-          // Voice speaks out loud from laptop speakers
           speakMessage("Hey buddy! You look totally distracted! Let's take a 20 second funny brain break right now!");
         } else {
           setBoredomAlert(false);
@@ -144,9 +141,6 @@ export default function App() {
     }
   };
 
-  const line1 = "FEED UR POTENTIAL".split("");
-  const line2 = "NOT YOUR FEED".split("");
-
   const totalDaysCount = parseInt(totalDays) || 30;
   const baseRoadmapDaysArray = Array.from({ length: Math.min(totalDaysCount, 15) }, (_, i) => i + 1);
 
@@ -182,11 +176,6 @@ export default function App() {
     <div style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif', padding: '20px', boxSizing: 'border-box', position: 'relative', overflowX: 'hidden' }}>
       
       <style>{`
-        @keyframes dropLetter {
-          0% { opacity: 0; transform: translateY(-80px) scale(0.5); }
-          60% { opacity: 1; transform: translateY(10px) scale(1.05); }
-          100% { opacity: 1; transform: translateY(0px) scale(1); }
-        }
         @keyframes floatParticle {
           0% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.15; }
           50% { transform: translateY(-60px) translateX(30px) scale(1.2); opacity: 0.7; }
@@ -195,11 +184,6 @@ export default function App() {
         @keyframes fadeInScale {
           0% { opacity: 0; transform: scale(0.95) translateY(15px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes pulseGlow {
-          0% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-          50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
-          100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
         }
         @keyframes wiggle {
           0% { transform: rotate(0deg); }
@@ -221,27 +205,19 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 1: LANDING (No boxes, neon text shadow effect on alphabets) */}
+      {/* VIEW 1: LANDING (Fixed inline text layout without letter dropping down onto new lines) */}
       {view === 'landing' && (
         <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
           
-          <div style={{ textAlign: 'center', maxWidth: '850px', padding: '0 20px' }}>
-            <h1 style={{ fontSize: 'clamp(40px, 6.5vw, 76px)', fontWeight: '900', lineHeight: '1.25', margin: 0, letterSpacing: '-1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <div style={{ textAlign: 'center', maxWidth: '950px', padding: '0 20px' }}>
+            <h1 style={{ fontSize: 'clamp(32px, 5.5vw, 68px)', fontWeight: '900', lineHeight: '1.25', margin: 0, letterSpacing: '-1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {line1.map((char, index) => (
-                  <span key={index} style={{ display: 'inline-block', color: '#ffffff', textShadow: '0 0 25px rgba(56, 189, 248, 0.8), 0 0 50px rgba(99, 102, 241, 0.5), 0 4px 10px rgba(0,0,0,0.9)', animation: `dropLetter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`, animationDelay: `${index * 0.04}s`, whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
-                    {char === ' ' ? '\u00A0' : char}
-                  </span>
-                ))}
+              <div style={{ width: '100%', whiteSpace: 'nowrap', color: '#ffffff', textShadow: '0 0 25px rgba(56, 189, 248, 0.8), 0 0 50px rgba(99, 102, 241, 0.5), 0 4px 10px rgba(0,0,0,0.9)' }}>
+                FEED UR POTENTIAL
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {line2.map((char, index) => (
-                  <span key={index} style={{ display: 'inline-block', background: 'linear-gradient(to right, #818cf8, #38bdf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 25px rgba(52, 211, 153, 0.7)) drop-shadow(0 0 50px rgba(6, 182, 212, 0.4))', animation: `dropLetter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`, animationDelay: `${(line1.length + index) * 0.04}s`, whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
-                    {char === ' ' ? '\u00A0' : char}
-                  </span>
-                ))}
+              <div style={{ width: '100%', whiteSpace: 'nowrap', background: 'linear-gradient(to right, #818cf8, #38bdf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 25px rgba(52, 211, 153, 0.7)) drop-shadow(0 0 50px rgba(6, 182, 212, 0.4))' }}>
+                NOT YOUR FEED
               </div>
 
             </h1>
