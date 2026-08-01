@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function App() {
-  const [view, setView] = useState('landing'); // 'landing', 'signin', 'dashboard'
+  const [view, setView] = useState('landing'); // 'landing', 'signin', 'domain-setup', 'dashboard'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Domain & Setup Inputs (Asked right after Sign In)
+  const [selectedDomain, setSelectedDomain] = useState('Embedded Systems');
+  const [targetDays, setTargetDays] = useState('30');
+  const [dailyHours, setDailyHours] = useState('2');
 
   // Revision & Gap Simulation State
   const [unplannedMissed, setUnplannedMissed] = useState(0); 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [tempMissedInput, setTempMissedInput] = useState('2');
 
+  // Revision Quiz Modal State
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [quizScore, setQuizScore] = useState(null);
+
   // App Dashboard State
   const [activeTab, setActiveTab] = useState('roadmap');
-  const [completedDays, setCompletedDays] = useState([1]);
   const [selectedDay, setSelectedDay] = useState(null);
 
   // AI Recommendation Engine Pipeline State
@@ -20,14 +28,13 @@ export default function App() {
 
   // Camera & Distraction Telemetry State
   const [boredomAlert, setBoredomAlert] = useState(false);
-  const [engagementScore, setEngagementScore] = useState(94);
   const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
 
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
 
-  // Default Video Pipeline Database (Neutral)
+  // Default Video Pipeline Database
   const defaultVideos = [
     { id: 'v-1', title: "Core System Architecture & Low-Level Register Programming", topicTag: "architecture", difficultyScore: 3, contentQualityScore: 9.8, channel: "System Hub", url: "https://youtube.com" },
     { id: 'v-2', title: "Task Scheduling & Real-Time Operating Systems from Scratch", topicTag: "rtos", difficultyScore: 2, contentQualityScore: 9.5, channel: "Code Mastery", url: "https://youtube.com" },
@@ -70,7 +77,7 @@ export default function App() {
     return scored;
   };
 
-  // Webcam telemetry simulation
+  // Webcam telemetry simulation on dashboard load
   useEffect(() => {
     let interval;
     if (view === 'dashboard') {
@@ -88,16 +95,15 @@ export default function App() {
 
       interval = setInterval(() => {
         const randomEvent = Math.random();
-        if (randomEvent > 0.7) {
+        if (randomEvent > 0.75) {
           setBoredomAlert(true);
           setFunnyChallengeActive(true);
           setTimeLeft(20);
-          setEngagementScore(prev => Math.max(50, prev - 20));
           speakMessage("Focus check! Attention dip detected.");
         } else {
           setBoredomAlert(false);
         }
-      }, 7000);
+      }, 8000);
     }
 
     return () => {
@@ -123,7 +129,12 @@ export default function App() {
 
   const handleSignIn = (e) => {
     e.preventDefault();
-    if (email && password) setView('dashboard');
+    if (email && password) setView('domain-setup');
+  };
+
+  const handleDomainSubmit = (e) => {
+    e.preventDefault();
+    if (selectedDomain && targetDays) setView('dashboard');
   };
 
   const handleApplySimulation = (e) => {
@@ -131,9 +142,11 @@ export default function App() {
     const missed = parseInt(tempMissedInput) || 0;
     setUnplannedMissed(missed);
     setShowSimulateModal(false);
+    setShowQuizModal(true); // Trigger mandatory revision quiz popup on gap addition
   };
 
-  const baseRoadmapDaysArray = Array.from({ length: 15 }, (_, i) => i + 1);
+  const daysCount = parseInt(targetDays) || 30;
+  const baseRoadmapDaysArray = Array.from({ length: Math.min(daysCount, 15) }, (_, i) => i + 1);
 
   const getDynamicRoadmap = () => {
     if (unplannedMissed <= 0) {
@@ -141,10 +154,10 @@ export default function App() {
     }
     const compressed = [];
     for (let r = 1; r <= unplannedMissed; r++) {
-      compressed.push({ day: r, type: 'revision', label: `🔄 REVISION: Gap Recovery #${r}` });
+      compressed.push({ day: r, type: 'revision', label: `🔄 REVISION QUIZ: Gap Recovery #${r}` });
     }
     let topicCounter = 1;
-    for (let i = unplannedMissed + 1; i <= 15; i++) {
+    for (let i = unplannedMissed + 1; i <= baseRoadmapDaysArray.length; i++) {
       compressed.push({ day: i, type: 'new', label: `✨ New Module Vector ${topicCounter}` });
       topicCounter++;
     }
@@ -157,10 +170,10 @@ export default function App() {
   return (
     <div style={{ backgroundColor: '#000000', color: '#ffffff', minHeight: '100vh', fontFamily: 'monospace', padding: '20px', boxSizing: 'border-box', position: 'relative' }}>
       
-      {/* TOP RIGHT SIGN IN BUTTON ON LANDING */}
+      {/* LANDING TOP RIGHT SIGN IN */}
       {view === 'landing' && (
         <div style={{ position: 'absolute', top: '25px', right: '35px', zIndex: 30 }}>
-          <button onClick={() => setView('signin')} style={{ background: 'transparent', border: '1px solid #ffffff', color: '#ffffff', padding: '10px 24px', borderRadius: '0px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>
+          <button onClick={() => setView('signin')} style={{ background: 'transparent', border: '1px solid #ffffff', color: '#ffffff', padding: '10px 24px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>
             SIGN IN ➔
           </button>
         </div>
@@ -169,11 +182,11 @@ export default function App() {
       {/* VIEW 1: LANDING */}
       {view === 'landing' && (
         <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <h1 style={{ fontSize: 'clamp(32px, 5vw, 60px)', fontWeight: '900', borderBottom: '2px solid #ffffff', paddingBottom: '20px', marginBottom: '20px' }}>
-            AI VIDEO RECOMMENDATION PIPELINE & UI
+          <h1 style={{ fontSize: 'clamp(28px, 5vw, 56px)', fontWeight: '900', borderBottom: '2px solid #ffffff', paddingBottom: '20px', marginBottom: '20px' }}>
+            AI VIDEO RECOMMENDATION & ROADMAP SYSTEM
           </h1>
           <p style={{ fontSize: '13px', color: '#cccccc', maxWidth: '600px', marginBottom: '40px' }}>
-            Pure black and white interface layout with automated telemetry tracking and content-scored video mapping[cite: 1].
+            Pure black and white interface featuring automated webcam telemetry tracking, dynamic roadmap adjustments, and revision quiz integration.
           </p>
           <button onClick={() => setView('signin')} style={{ background: '#ffffff', border: '1px solid #ffffff', color: '#000000', padding: '16px 40px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
             LAUNCH SYSTEM 🚀
@@ -195,27 +208,53 @@ export default function App() {
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} required />
             </div>
             <button type="submit" style={{ background: '#ffffff', color: '#000000', border: 'none', padding: '14px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', marginTop: '10px' }}>
-              ACCESS DASHBOARD ➔
+              PROCEED TO SETUP ➔
             </button>
           </form>
         </div>
       )}
 
-      {/* VIEW 3: FULL DASHBOARD */}
+      {/* VIEW 3: DOMAIN & TARGET DAYS SETUP (Asked immediately after sign in) */}
+      {view === 'domain-setup' && (
+        <div style={{ maxWidth: '440px', margin: '60px auto', background: '#000000', border: '1px solid #ffffff', padding: '40px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ffffff', paddingBottom: '10px' }}>DOMAIN & SCHEDULE SETUP</h2>
+          <p style={{ fontSize: '11px', color: '#cccccc', marginBottom: '20px' }}>Define your learning objective and timeline targets.</p>
+          
+          <form onSubmit={handleDomainSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div>
+              <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>ENTER YOUR DOMAIN</label>
+              <input type="text" value={selectedDomain} onChange={e => setSelectedDomain(e.target.value)} placeholder="e.g. Embedded Systems, AI, Web Dev" style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} required />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>TARGET DAYS TO COMPLETE</label>
+              <input type="number" value={targetDays} onChange={e => setTargetDays(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} min="5" max="90" required />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>DAILY HOURS AVAILABLE</label>
+              <input type="number" value={dailyHours} onChange={e => setDailyHours(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} min="1" max="12" required />
+            </div>
+            <button type="submit" style={{ background: '#ffffff', color: '#000000', border: 'none', padding: '14px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', marginTop: '10px' }}>
+              GENERATE ROADMAP & START DASHBOARD 🚀
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* VIEW 4: FULL DASHBOARD */}
       {view === 'dashboard' && (
         <div style={{ maxWidth: '1100px', margin: '20px auto', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative' }}>
           
           {/* WEBCAM PREVIEW BOX */}
           <div style={{ position: 'fixed', top: '20px', right: '20px', width: '150px', height: '110px', background: '#000000', border: '2px solid #ffffff', zIndex: 150 }}>
             <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-            <div style={{ position: 'absolute', bottom: '2px', left: '2px', background: '#000000', border: '1px solid #ffffff', padding: '1px 4px', fontSize: '7px', color: '#ffffff' }}>CAM ACTIVE</div>
+            <div style={{ position: 'absolute', bottom: '2px', left: '2px', background: '#000000', border: '1px solid #ffffff', padding: '1px 4px', fontSize: '7px', color: '#ffffff' }}>CAM ACTIVE 🟢</div>
           </div>
 
           {/* DISTRACTION RECOVERY OVERLAY */}
           {funnyChallengeActive && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', border: '5px solid #ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 200, textAlign: 'center', padding: '20px' }}>
-              <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>⚠️ ATTENTION DROP DETECTED</h2>
-              <p style={{ fontSize: '12px', color: '#cccccc', maxWidth: '400px', marginBottom: '20px' }}>Pipeline boosted foundational review videos into your queue.</p>
+              <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>⚠️ DISTRACTION DETECTED BY WEBCAM</h2>
+              <p style={{ fontSize: '12px', color: '#cccccc', maxWidth: '400px', marginBottom: '20px' }}>Pipeline boosted fundamental review videos into your queue.</p>
               <div style={{ fontSize: '36px', fontWeight: '900', marginBottom: '20px' }}>{timeLeft}s</div>
               <button onClick={() => setFunnyChallengeActive(false)} style={{ background: '#ffffff', color: '#000000', border: 'none', padding: '10px 20px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
                 Resume Learning ⚡
@@ -223,14 +262,48 @@ export default function App() {
             </div>
           )}
 
+          {/* REVISION QUIZ MODAL (Triggered when gap is added) */}
+          {showQuizModal && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.9)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 220, padding: '20px' }}>
+              <div style={{ background: '#000000', border: '2px solid #ffffff', padding: '30px', width: '420px', maxWidth: '100%' }}>
+                <h3 style={{ fontSize: '15px', marginBottom: '10px', borderBottom: '1px solid #ffffff', paddingBottom: '8px' }}>📝 MANDATORY REVISION QUIZ</h3>
+                <p style={{ fontSize: '12px', color: '#cccccc', marginBottom: '15px' }}>Gap registered! Clear this quick evaluation before resuming new topics.</p>
+                
+                <div style={{ fontSize: '12px', marginBottom: '15px' }}>
+                  <strong>Q: What is the primary purpose of priority task scheduling in real-time execution?</strong>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+                  <button onClick={() => setQuizScore('Passed')} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '10px', textAlign: 'left', fontSize: '11px', cursor: 'pointer' }}>
+                    A) Ensuring deterministic deadlines for critical tasks
+                  </button>
+                  <button onClick={() => setQuizScore('Passed')} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '10px', textAlign: 'left', fontSize: '11px', cursor: 'pointer' }}>
+                    B) Randomizing CPU clock cycles
+                  </button>
+                </div>
+
+                {quizScore && (
+                  <div style={{ fontSize: '12px', color: '#00ff00', marginBottom: '15px' }}>Quiz Cleared Successfully! Roadmap updated.</div>
+                )}
+
+                <button onClick={() => { setShowQuizModal(false); setQuizScore(null); }} style={{ background: '#ffffff', color: '#000000', border: 'none', padding: '10px 20px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', width: '100%' }}>
+                  Close & Continue Pipeline ➔
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* DASHBOARD HEADER */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #ffffff', padding: '20px', marginRight: '170px' }}>
             <div>
-              <span style={{ fontSize: '10px', textTransform: 'uppercase' }}>SYSTEM PIPELINE • SECURE SESSION</span>
+              <span style={{ fontSize: '10px', textTransform: 'uppercase' }}>ACTIVE DOMAIN: {selectedDomain.toUpperCase()} | TARGET: {targetDays} DAYS</span>
               <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '4px 0 0 0' }}>Core Execution Engine</h2>
             </div>
-            <div>
-              <button onClick={() => setShowSimulateModal(true)} style={{ background: 'transparent', border: '1px solid #ffffff', color: '#ffffff', padding: '10px 16px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setView('domain-setup')} style={{ background: 'transparent', border: '1px solid #ffffff', color: '#ffffff', padding: '10px 14px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
+                ⚙️ Reconfigure
+              </button>
+              <button onClick={() => setShowSimulateModal(true)} style={{ background: 'transparent', border: '1px solid #ffffff', color: '#ffffff', padding: '10px 14px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
                 ⚠️ Simulate Gap
               </button>
             </div>
@@ -240,10 +313,10 @@ export default function App() {
           {showSimulateModal && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
               <div style={{ background: '#000000', border: '1px solid #ffffff', padding: '30px', width: '350px' }}>
-                <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Simulate Disruption</h3>
+                <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Simulate Disruption / Gap</h3>
                 <form onSubmit={handleApplySimulation} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
                   <input type="number" value={tempMissedInput} onChange={e => setTempMissedInput(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '10px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} min="1" max="5" required />
-                  <button type="submit" style={{ background: '#ffffff', color: '#000000', border: 'none', padding: '10px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>Apply Revision Pipeline 🔄</button>
+                  <button type="submit" style={{ background: '#ffffff', color: '#000000', border: 'none', padding: '10px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>Apply Revision Pipeline & Quiz 🔄</button>
                 </form>
               </div>
             </div>
@@ -297,7 +370,7 @@ export default function App() {
 
               {/* ROADMAP GRID */}
               <div style={{ border: '1px solid #ffffff', padding: '20px' }}>
-                <h3 style={{ fontSize: '12px', margin: '0 0 15px 0' }}>🗺️ MILESTONE SEQUENCE</h3>
+                <h3 style={{ fontSize: '12px', margin: '0 0 15px 0' }}>🗺️ ADAPTIVE MILESTONE SEQUENCE</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
                   {currentRoadmap.map((item) => {
                     const isRevision = item.type === 'revision';
@@ -318,7 +391,7 @@ export default function App() {
             <div style={{ border: '1px solid #ffffff', padding: '20px' }}>
               <h3 style={{ fontSize: '12px', margin: '0 0 15px 0' }}>🛠️ SYSTEM PROJECTS</h3>
               <div style={{ border: '1px solid #555555', padding: '15px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Project Verification Matrix</div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Project Verification Matrix for {selectedDomain}</div>
                 <p style={{ fontSize: '11px', color: '#cccccc' }}>System modules and practical challenges configuration ready.</p>
               </div>
             </div>
