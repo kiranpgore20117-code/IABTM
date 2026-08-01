@@ -28,7 +28,6 @@ export default function App() {
 
   // Floating background elements
   const [particles, setParticles] = useState([]);
-  const [floatingCards, setFloatingCards] = useState([]);
 
   useEffect(() => {
     const pts = Array.from({ length: 25 }).map(() => ({
@@ -39,14 +38,6 @@ export default function App() {
       delay: Math.random() * 5
     }));
     setParticles(pts);
-
-    const cards = [
-      { id: 1, title: '⚡ CLOSED-LOOP REVISION', desc: 'Missed days force an automated revision buffer before new topics unlock.', x: '5%', y: '25%', duration: '8s', delay: '0s' },
-      { id: 2, title: '🧠 CAMERA ENGAGEMENT', desc: 'Detects fatigue & boosts momentum without distraction.', x: '73%', y: '20%', duration: '10s', delay: '1s' },
-      { id: 3, title: '🛠️ PROJECT & INTERVIEW', desc: 'Embedded projects, interview tricks & job networking.', x: '6%', y: '68%', duration: '9s', delay: '2s' },
-      { id: 4, title: '🎙️ STREAK PODCASTS', desc: 'Unlocks expert audio breakdowns upon streak completion.', x: '72%', y: '65%', duration: '11s', delay: '1.5s' }
-    ];
-    setFloatingCards(cards);
   }, []);
 
   useEffect(() => {
@@ -145,11 +136,6 @@ export default function App() {
           50% { transform: translateY(-60px) translateX(30px) scale(1.2); opacity: 0.7; }
           100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.15; }
         }
-        @keyframes floatCard {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(1deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
-        }
         @keyframes fadeInScale {
           0% { opacity: 0; transform: scale(0.95) translateY(15px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -167,46 +153,45 @@ export default function App() {
 
       {view === 'landing' && (
         <div style={{ position: 'absolute', top: '25px', right: '35px', zIndex: 30 }}>
-          <button onClick={() => setView('signin')} style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(6, 182, 212, 0.2))', border: '1px solid #38bdf8', color: '#38bdf8', padding: '12px 28px', borderRadius: '14px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', boxShadow: '0 0 20px rgba(56, 189, 248, 0.25)', backdropFilter: 'blur(10px)' }}>
+          <button onClick={() => setView('signin')} style={{ background: 'transparent', border: '1px solid #38bdf8', color: '#38bdf8', padding: '10px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', textShadow: '0 0 10px rgba(56, 189, 248, 0.6)', boxShadow: '0 0 15px rgba(56, 189, 248, 0.2)' }}>
             SIGN IN ➔
           </button>
         </div>
       )}
 
-      {/* VIEW 1: LANDING */}
+      {/* VIEW 1: LANDING (Boxes removed, glowing alphabet text shadow effects added) */}
       {view === 'landing' && (
         <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
-          {floatingCards.map((card) => (
-            <div key={card.id} style={{ position: 'absolute', top: card.y, left: card.x, width: '220px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '16px', padding: '16px', boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7)', animation: `floatCard ${card.duration} infinite ease-in-out`, animationDelay: card.delay, pointerEvents: 'none' }}>
-              <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '4px' }}>{card.title}</div>
-              <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.4' }}>{card.desc}</div>
-            </div>
-          ))}
-
-          <div style={{ textAlign: 'center', maxWidth: '750px', padding: '0 20px' }}>
-            <h1 style={{ fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: '900', lineHeight: '1.2', margin: 0, letterSpacing: '-1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          
+          <div style={{ textAlign: 'center', maxWidth: '850px', padding: '0 20px' }}>
+            <h1 style={{ fontSize: 'clamp(40px, 6.5vw, 76px)', fontWeight: '900', lineHeight: '1.25', margin: 0, letterSpacing: '-1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              
+              {/* Line 1 with heavy drop & alphabet neon shadow */}
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {line1.map((char, index) => (
-                  <span key={index} style={{ display: 'inline-block', color: '#ffffff', textShadow: '0 4px 20px rgba(255, 255, 255, 0.4)', animation: `dropLetter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`, animationDelay: `${index * 0.04}s`, whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
+                  <span key={index} style={{ display: 'inline-block', color: '#ffffff', textShadow: '0 0 25px rgba(56, 189, 248, 0.8), 0 0 50px rgba(99, 102, 241, 0.5), 0 4px 10px rgba(0,0,0,0.9)', animation: `dropLetter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`, animationDelay: `${index * 0.04}s`, whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
                     {char === ' ' ? '\u00A0' : char}
                   </span>
                 ))}
               </div>
+
+              {/* Line 2 with neon shadow */}
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {line2.map((char, index) => (
-                  <span key={index} style={{ display: 'inline-block', background: 'linear-gradient(to right, #818cf8, #38bdf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: `dropLetter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`, animationDelay: `${(line1.length + index) * 0.04}s`, whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
+                  <span key={index} style={{ display: 'inline-block', background: 'linear-gradient(to right, #818cf8, #38bdf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 25px rgba(52, 211, 153, 0.7)) drop-shadow(0 0 50px rgba(6, 182, 212, 0.4))', animation: `dropLetter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both`, animationDelay: `${(line1.length + index) * 0.04}s`, whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
                     {char === ' ' ? '\u00A0' : char}
                   </span>
                 ))}
               </div>
+
             </h1>
 
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '25px', marginBottom: '35px', lineHeight: '1.6', animation: 'fadeInScale 1s ease-out 0.8s both' }}>
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '30px', marginBottom: '40px', lineHeight: '1.6', textShadow: '0 2px 10px rgba(0,0,0,0.8)', animation: 'fadeInScale 1s ease-out 0.8s both' }}>
               Autonomous Closed-Loop Learning Engine with Mandatory Revision-First Gap Recovery & Camera Boredom Boosters.
             </p>
 
             <div style={{ animation: 'fadeInScale 1s ease-out 1s both' }}>
-              <button onClick={() => setView('signin')} style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px 38px', borderRadius: '16px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 20px 40px -10px rgba(99, 102, 241, 0.6)' }}>
+              <button onClick={() => setView('signin')} style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px 42px', borderRadius: '16px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', textShadow: '0 2px 5px rgba(0,0,0,0.4)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(6, 182, 212, 0.3)' }}>
                 GET STARTED & BUILD ROADMAP 🚀
               </button>
             </div>
@@ -239,7 +224,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 3: CLEAN CONFIG (No unplanned days asked here) */}
+      {/* VIEW 3: CLEAN CONFIG */}
       {view === 'plan-input' && (
         <div style={{ maxWidth: '480px', margin: '40px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
           <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>CUSTOM ROADMAP CONFIG</h2>
