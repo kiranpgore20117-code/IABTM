@@ -1,66 +1,95 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function App() {
-  const [view, setView] = useState('signin'); // 'signin', 'domain-setup', 'dashboard'
-  
-  // Input Domain & Schedule State
-  const [domain, setDomain] = useState('');
+  const [view, setView] = useState('landing'); // 'landing', 'signin', 'plan-input', 'dashboard'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Feature 1 Inputs
+  const [course, setCourse] = useState('');
   const [dailyHours, setDailyHours] = useState('2');
-  const [targetDurationMonths, setTargetDurationMonths] = useState('3');
-
-  // Roadmap & Gap Simulation State
-  const [unplannedMissed, setUnplannedMissed] = useState(0);
+  const [totalDays, setTotalDays] = useState('30');
+  
+  // Feature 2 Inputs (Planned vs Unplanned Disruptions)
+  const [unplannedMissed, setUnplannedMissed] = useState(0); 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
-  const [tempGapInput, setTempGapInput] = useState('2');
+  const [tempMissedInput, setTempMissedInput] = useState('2');
 
-  // Revision Quiz Modal State (For Gap Recovery)
-  const [showQuizModal, setShowQuizModal] = useState(false);
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  // App State & Tracking
+  const [activeTab, setActiveTab] = useState('roadmap');
+  const [completedDays, setCompletedDays] = useState([1]);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [potentialHours, setPotentialHours] = useState(2);
 
-  // Webcam & Distraction Telemetry State
+  // Feature 5: Continuous Camera & 6s Distraction Fun Refresher State
+  const [boredomAlert, setBoredomAlert] = useState(false);
+  const [engagementScore, setEngagementScore] = useState(94);
+  const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(20);
+
+  // Refs for continuous live webcam stream
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
-  
-  // Real-time Distraction Telemetry & Refreshment Puzzle State
-  const [distractionActive, setDistractionActive] = useState(false);
-  const [refreshPuzzleSolved, setRefreshPuzzleSolved] = useState(false);
-  const [refreshCountdown, setRefreshCountdown] = useState(20);
 
+  // Floating background elements
+  const [particles, setParticles] = useState([]);
+
+  useEffect(() => {
+    const pts = Array.from({ length: 25 }).map(() => ({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 5 + 2,
+      duration: Math.random() * 12 + 6,
+      delay: Math.random() * 5
+    }));
+    setParticles(pts);
+  }, []);
+
+  // Text-to-speech speaker helper using laptop speakers
   const speakMessage = (text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      utterance.pitch = 1.2;
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  // Webcam activation and live distraction monitoring on dashboard view
+  // Automatically start webcam when dashboard opens
   useEffect(() => {
     let interval;
     if (view === 'dashboard') {
-      const startWebcam = async () => {
+      const startCameraAutomatically = async () => {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 }, audio: false });
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { width: 320, height: 240 }, 
+            audio: false 
+          });
           mediaStreamRef.current = stream;
-          if (videoRef.current) videoRef.current.srcObject = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
         } catch (err) {
-          console.error("Webcam access error:", err);
+          console.error("Error accessing webcam automatically:", err);
         }
       };
-      startWebcam();
 
-      // Periodic telemetry check simulating real-time distraction detection
+      startCameraAutomatically();
+
+      // Changed interval check time limit to 6 seconds
       interval = setInterval(() => {
-        const isDistractedNow = Math.random() > 0.6;
-        if (isDistractedNow) {
-          setDistractionActive(true);
-          setRefreshPuzzleSolved(false);
-          setRefreshCountdown(20);
-          speakMessage("You are distracted! Please solve this refreshment puzzle.");
+        const randomEvent = Math.random();
+        if (randomEvent > 0.5) {
+          setBoredomAlert(true);
+          setFunnyChallengeActive(true);
+          setTimeLeft(20);
+          setEngagementScore(prev => Math.max(50, prev - 20));
+          speakMessage("Hey buddy! You look totally distracted! Let's take a quick 20 second funny brain break right now!");
+        } else {
+          setBoredomAlert(false);
         }
-      }, 14000);
+      }, 6000);
     }
 
     return () => {
@@ -72,214 +101,442 @@ export default function App() {
     };
   }, [view]);
 
-  // Countdown timer for distraction refreshment popup
+  // 20-second countdown timer for funny distraction mode
   useEffect(() => {
     let timer;
-    if (distractionActive && refreshCountdown > 0 && !refreshPuzzleSolved) {
-      timer = setInterval(() => setRefreshCountdown(prev => prev - 1), 1000);
-    } else if (refreshCountdown === 0 && distractionActive && !refreshPuzzleSolved) {
-      // Auto-dismiss or force focus if time runs out
-      setDistractionActive(false);
+    if (funnyChallengeActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && funnyChallengeActive) {
+      setFunnyChallengeActive(false);
+      setBoredomAlert(false);
+      speakMessage("Welcome back! Let's crush this roadmap!");
     }
     return () => clearInterval(timer);
-  }, [distractionActive, refreshCountdown, refreshPuzzleSolved]);
+  }, [funnyChallengeActive, timeLeft]);
 
-  const handleGoogleSignIn = () => {
-    setView('domain-setup');
+  const handleSignIn = (e) => {
+    e.preventDefault();
+    if (email && password) setView('plan-input');
   };
 
-  const handleDomainSubmit = (e) => {
+  const handleGenerateRoadmap = (e) => {
     e.preventDefault();
-    if (domain && dailyHours && targetDurationMonths) {
-      setView('dashboard');
+    if (course) setView('dashboard');
+  };
+
+  const handleApplySimulation = (e) => {
+    e.preventDefault();
+    const missed = parseInt(tempMissedInput) || 0;
+    setUnplannedMissed(missed);
+    setPotentialHours(prev => prev + Math.min(2, missed));
+    setShowSimulateModal(false);
+  };
+
+  const toggleDay = (dayNum) => {
+    if (completedDays.includes(dayNum)) {
+      setCompletedDays(completedDays.filter(d => d !== dayNum));
+    } else {
+      setCompletedDays([...completedDays, dayNum]);
     }
   };
 
-  const handleApplyGapSimulation = (e) => {
-    e.preventDefault();
-    const gap = parseInt(tempGapInput) || 0;
-    setUnplannedMissed(gap);
-    setShowSimulateModal(false);
-    setShowQuizModal(true); 
-  };
+  const totalDaysCount = parseInt(totalDays) || 30;
+  const baseRoadmapDaysArray = Array.from({ length: Math.min(totalDaysCount, 15) }, (_, i) => i + 1);
 
-  // Constant duration roadmap slots mapping
-  const totalSlots = 12;
   const getDynamicRoadmap = () => {
     if (unplannedMissed <= 0) {
-      return Array.from({ length: totalSlots }, (_, i) => ({ day: i + 1, type: 'normal', label: `Module Vector ${i + 1}` }));
+      return baseRoadmapDaysArray.map(d => ({ day: d, type: 'normal', label: `Module Vector ${d}` }));
     }
-    const roadmap = [];
+
+    const compressed = [];
     for (let r = 1; r <= unplannedMissed; r++) {
-      roadmap.push({ day: r, type: 'revision', label: `[REVISION QUIZ] Gap Recovery #${r}` });
+      compressed.push({
+        day: r,
+        type: 'revision',
+        label: `🔄 MANDATORY REVISION: Catching up on Missed Gap #${r}`
+      });
     }
-    let modNum = 1;
-    for (let i = unplannedMissed + 1; i <= totalSlots; i++) {
-      roadmap.push({ day: i, type: 'compressed', label: `[INTENSIVE] Module ${modNum}` });
-      modNum++;
+
+    let topicCounter = 1;
+    for (let i = unplannedMissed + 1; i <= Math.min(15, baseRoadmapDaysArray.length); i++) {
+      compressed.push({
+        day: i,
+        type: 'new',
+        label: `✨ New Topic Module Vector ${topicCounter}`
+      });
+      topicCounter++;
     }
-    return roadmap;
+    return compressed;
   };
 
   const currentRoadmap = getDynamicRoadmap();
 
   return (
-    <div style={{ backgroundColor: '#000000', color: '#ffffff', minHeight: '100vh', fontFamily: 'monospace', padding: '20px', boxSizing: 'border-box', position: 'relative' }}>
+    <div style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif', padding: '20px', boxSizing: 'border-box', position: 'relative', overflowX: 'hidden' }}>
       
-      {/* 1. SIGN IN VIEW */}
-      {view === 'signin' && (
-        <div style={{ maxWidth: '400px', margin: '120px auto', background: '#000000', border: '1px solid #ffffff', padding: '40px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>SYSTEM AUTHENTICATION</h2>
-          <p style={{ fontSize: '11px', color: '#cccccc', marginBottom: '30px' }}>Autonomous Learning & Telemetry Engine</p>
-          
-          <button onClick={handleGoogleSignIn} style={{ background: '#ffffff', color: '#000000', border: '1px solid #ffffff', padding: '14px 20px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-            🔵 Continue with Google
+      <style>{`
+        @keyframes floatParticle {
+          0% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.15; }
+          50% { transform: translateY(-60px) translateX(30px) scale(1.2); opacity: 0.7; }
+          100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.15; }
+        }
+        @keyframes fadeInScale {
+          0% { opacity: 0; transform: scale(0.95) translateY(15px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes wiggle {
+          0% { transform: rotate(0deg); }
+          25% { transform: rotate(-3deg); }
+          75% { transform: rotate(3deg); }
+          100% { transform: rotate(0deg); }
+        }
+      `}</style>
+
+      {particles.map((p, i) => (
+        <div key={i} style={{ position: 'absolute', top: `${p.y}%`, left: `${p.x}%`, width: `${p.size}px`, height: `${p.size}px`, background: i % 2 === 0 ? '#38bdf8' : '#818cf8', borderRadius: '50%', pointerEvents: 'none', animation: `floatParticle ${p.duration}s infinite ease-in-out`, animationDelay: `${p.delay}s`, boxShadow: '0 0 15px rgba(56, 189, 248, 0.8)' }} />
+      ))}
+
+      {view === 'landing' && (
+        <div style={{ position: 'absolute', top: '25px', right: '35px', zIndex: 30 }}>
+          <button onClick={() => setView('signin')} style={{ background: 'transparent', border: '1px solid #38bdf8', color: '#38bdf8', padding: '10px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', textShadow: '0 0 10px rgba(56, 189, 248, 0.6)', boxShadow: '0 0 15px rgba(56, 189, 248, 0.2)' }}>
+            SIGN IN ➔
           </button>
         </div>
       )}
 
-      {/* 2. DOMAIN & SCHEDULE SETUP VIEW */}
-      {view === 'domain-setup' && (
-        <div style={{ maxWidth: '440px', margin: '80px auto', background: '#000000', border: '1px solid #ffffff', padding: '40px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ffffff', paddingBottom: '10px' }}>COURSE PARAMETERS</h2>
-          <p style={{ fontSize: '11px', color: '#cccccc', marginBottom: '20px' }}>Define your target domain and study timeline.</p>
+      {/* VIEW 1: LANDING */}
+      {view === 'landing' && (
+        <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
           
-          <form onSubmit={handleDomainSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div style={{ textAlign: 'center', maxWidth: '950px', padding: '0 20px' }}>
+            <h1 style={{ fontSize: 'clamp(32px, 5.5vw, 68px)', fontWeight: '900', lineHeight: '1.25', margin: 0, letterSpacing: '-1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              
+              <div style={{ width: '100%', whiteSpace: 'nowrap', color: '#ffffff', textShadow: '0 0 25px rgba(56, 189, 248, 0.8), 0 0 50px rgba(99, 102, 241, 0.5), 0 4px 10px rgba(0,0,0,0.9)' }}>
+                FEED UR POTENTIAL
+              </div>
+
+              <div style={{ width: '100%', whiteSpace: 'nowrap', background: 'linear-gradient(to right, #818cf8, #38bdf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 25px rgba(52, 211, 153, 0.7)) drop-shadow(0 0 50px rgba(6, 182, 212, 0.4))' }}>
+                NOT YOUR FEED
+              </div>
+
+            </h1>
+
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '30px', marginBottom: '40px', lineHeight: '1.6', textShadow: '0 2px 10px rgba(0,0,0,0.8)', animation: 'fadeInScale 1s ease-out 0.8s both' }}>
+              Autonomous Closed-Loop Learning Engine with Mandatory Revision-First Gap Recovery & Smart Distraction Refresher.
+            </p>
+
+            <div style={{ animation: 'fadeInScale 1s ease-out 1s both' }}>
+              <button onClick={() => setView('signin')} style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px 42px', borderRadius: '16px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', textShadow: '0 2px 5px rgba(0,0,0,0.4)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(6, 182, 212, 0.3)' }}>
+                GET STARTED & BUILD ROADMAP 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 2: SIGN IN */}
+      {view === 'signin' && (
+        <div style={{ maxWidth: '440px', margin: '70px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>AGENT AUTHENTICATION</h2>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '25px' }}>Enter credentials to initialize your closed-loop telemetry.</p>
+
+          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
-              <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>TARGET DOMAIN</label>
-              <input type="text" value={domain} onChange={e => setDomain(e.target.value)} placeholder="e.g. Embedded Systems, AI" style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} required />
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>EMAIL ADDRESS</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="student@hbtm.ai" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
             <div>
-              <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>DAILY STUDY HOURS</label>
-              <input type="number" value={dailyHours} onChange={e => setDailyHours(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} min="1" max="12" required />
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>PASSWORD</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
+            <button type="submit" style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', marginTop: '10px' }}>
+              CONTINUE TO ROADMAP SETUP ➔
+            </button>
+          </form>
+          <button onClick={() => setView('landing')} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '11px', marginTop: '20px', width: '100%', textAlign: 'center' }}>
+            ← BACK TO HOME
+          </button>
+        </div>
+      )}
+
+      {/* VIEW 3: CLEAN CONFIG */}
+      {view === 'plan-input' && (
+        <div style={{ maxWidth: '480px', margin: '40px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>CUSTOM ROADMAP CONFIG</h2>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '25px' }}>Configure your baseline learning track parameters.</p>
+
+          <form onSubmit={handleGenerateRoadmap} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
-              <label style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>COMPLETION DURATION (MONTHS)</label>
-              <input type="number" value={targetDurationMonths} onChange={e => setTargetDurationMonths(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '12px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} min="1" max="12" required />
+              <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>WHICH COURSE DO YOU WANNA DO?</label>
+              <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="e.g., Full Stack Web Dev / AI Engineer" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
-            <button type="submit" style={{ background: '#ffffff', color: '#000000', border: '1px solid #ffffff', padding: '14px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', marginTop: '10px' }}>
-              INITIALIZE ROADMAP ➔
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>DAILY HOURS ALLOTED</label>
+                <select value={dailyHours} onChange={e => setDailyHours(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }}>
+                  <option value="1">1 Hour / Day</option>
+                  <option value="2">2 Hours / Day</option>
+                  <option value="3">3 Hours / Day</option>
+                  <option value="4">4+ Hours / Day</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>TOTAL COMPLETION DAYS</label>
+                <input type="number" value={totalDays} onChange={e => setTotalDays(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
+              </div>
+            </div>
+
+            <button type="submit" style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 15px 30px -5px rgba(99, 102, 241, 0.5)' }}>
+              INITIALIZE ADAPTIVE ROADMAP ENGINE 🚀
             </button>
           </form>
         </div>
       )}
 
-      {/* 3. DASHBOARD VIEW */}
+      {/* VIEW 4: DASHBOARD */}
       {view === 'dashboard' && (
-        <div style={{ maxWidth: '1100px', margin: '20px auto', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative' }}>
+        <div style={{ maxWidth: '1100px', margin: '20px auto', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', zIndex: 20, animation: 'fadeInScale 0.6s ease-out' }}>
           
-          {/* WEBCAM ACTIVE PREVIEW */}
-          <div style={{ position: 'fixed', top: '20px', right: '20px', width: '150px', height: '110px', background: '#000000', border: '2px solid #ffffff', zIndex: 150 }}>
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-            <div style={{ position: 'absolute', bottom: '2px', left: '2px', background: '#000000', border: '1px solid #ffffff', padding: '1px 4px', fontSize: '7px', color: '#ffffff' }}>CAM ACTIVE 🟢</div>
+          {/* FLOATING WEBCAM FEED ON RIGHT TOP CORNER */}
+          <div style={{ position: 'fixed', top: '20px', right: '20px', width: '160px', height: '120px', background: '#000', border: `2px solid ${boredomAlert ? '#ef4444' : '#38bdf8'}`, borderRadius: '12px', overflow: 'hidden', zIndex: 150, boxShadow: '0 10px 25px rgba(0,0,0,0.8)' }}>
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} 
+            />
+            <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '8px', color: '#34d399', fontFamily: 'monospace' }}>
+              LIVE CAM 🟢
+            </div>
           </div>
 
-          {/* REAL-TIME DISTRACTION & REFRESHMENT PUZZLE MODAL */}
-          {distractionActive && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.96)', border: '5px solid #ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 300, textAlign: 'center', padding: '20px' }}>
-              <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>🚨 WEBCAM ALERT: YOU ARE DISTRACTED!</h2>
-              <p style={{ fontSize: '12px', color: '#cccccc', maxWidth: '420px', marginBottom: '20px' }}>Telemetry monitoring detected gaze drift. Clear this refreshment puzzle to resume dashboard:</p>
+          {/* FUNNY 20-SECOND DISTRACTION REFRESHER OVERLAY */}
+          {funnyChallengeActive && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 200, animation: 'fadeInScale 0.3s ease-out', textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: '50px', animation: 'wiggle 0.5s infinite' }}>🤪🚨</div>
+              <h2 style={{ fontSize: '28px', color: '#fcd34d', margin: '15px 0 5px 0' }}>BUSTED! YOU ARE DISTRACTED!</h2>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', maxWidth: '400px', marginBottom: '20px' }}>Your AI companion noticed you spacing out! Let's do a quick, funny 20-second brain refresh right now through your laptop speaker!</p>
               
-              <div style={{ border: '1px solid #ffffff', padding: '20px', maxWidth: '400px', marginBottom: '20px', background: '#111111', textAlign: 'left' }}>
-                <p style={{ fontSize: '12px', marginBottom: '10px' }}><strong>Refreshment Puzzle:</strong> What architectural unit executes arithmetic and logic operations?</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
-                  <button onClick={() => setRefreshPuzzleSolved(true)} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '8px', fontSize: '11px', cursor: 'pointer', textAlign: 'left' }}>
-                    A) ALU (Arithmetic Logic Unit)
-                  </button>
-                  <button onClick={() => setRefreshPuzzleSolved(true)} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '8px', fontSize: '11px', cursor: 'pointer', textAlign: 'left' }}>
-                    B) Power Supply Regulator
-                  </button>
-                </div>
+              <div style={{ fontSize: '42px', fontWeight: '900', color: '#38bdf8', fontFamily: 'monospace', marginBottom: '25px', textShadow: '0 0 20px rgba(56, 189, 248, 0.6)' }}>
+                {timeLeft}s remaining
               </div>
 
-              {refreshPuzzleSolved && (
-                <div style={{ fontSize: '12px', color: '#ffffff', border: '1px solid #ffffff', padding: '8px', marginBottom: '15px', background: '#000000' }}>
-                  Puzzle Solved! Focus restored.
-                </div>
-              )}
+              <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '16px', padding: '20px', maxWidth: '450px' }}>
+                <div style={{ fontSize: '13px', color: '#34d399', fontWeight: 'bold', marginBottom: '6px' }}>Quick Fun Challenge:</div>
+                <div style={{ fontSize: '12px', color: '#f8fafc' }}>Blink 3 times super fast, stretch your arms high up, and smile like you just won the lottery! 😄🙌</div>
+              </div>
 
-              <div style={{ fontSize: '28px', fontWeight: '900', marginBottom: '15px' }}>Auto-dismiss in: {refreshCountdown}s</div>
-              
-              <button onClick={() => setDistractionActive(false)} style={{ background: '#ffffff', color: '#000000', border: '1px solid #ffffff', padding: '10px 24px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
-                Resume Learning ⚡
+              <button onClick={() => setFunnyChallengeActive(false)} style={{ marginTop: '25px', background: '#34d399', color: '#020617', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                I'm Refreshed & Ready! ⚡
               </button>
             </div>
           )}
 
-          {/* GAP REVISION QUIZ MODAL */}
-          {showQuizModal && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.9)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 220, padding: '20px' }}>
-              <div style={{ background: '#000000', border: '2px solid #ffffff', padding: '30px', width: '450px', maxWidth: '100%' }}>
-                <h3 style={{ fontSize: '14px', marginBottom: '10px', borderBottom: '1px solid #ffffff', paddingBottom: '8px' }}>[REVISION QUIZ EVALUATION]</h3>
-                <p style={{ fontSize: '12px', color: '#cccccc', marginBottom: '15px' }}>Unplanned gap registered. Clear this quiz for your missed topics:</p>
-                
-                <div style={{ fontSize: '12px', marginBottom: '15px', background: '#000000', padding: '15px', border: '1px solid #ffffff' }}>
-                  <strong>Question:</strong> What is the primary execution behavior during high-priority interrupt handling in {domain}?
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-                  <button onClick={() => setQuizSubmitted(true)} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '10px', textAlign: 'left', fontSize: '11px', cursor: 'pointer' }}>
-                    A) Save context and execute critical routine immediately
-                  </button>
-                  <button onClick={() => setQuizSubmitted(true)} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '10px', textAlign: 'left', fontSize: '11px', cursor: 'pointer' }}>
-                    B) Discard all current states
-                  </button>
-                </div>
-
-                {quizSubmitted && (
-                  <div style={{ fontSize: '11px', color: '#ffffff', border: '1px solid #ffffff', padding: '8px', marginBottom: '15px' }}>Quiz Cleared Successfully! Roadmap Re-indexed with same target duration.</div>
-                )}
-
-                <button onClick={() => { setShowQuizModal(false); setQuizSubmitted(false); }} style={{ background: '#ffffff', color: '#000000', border: '1px solid #ffffff', padding: '10px 20px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', width: '100%' }}>
-                  Continue Dashboard ➔
-                </button>
+          {/* Top Header & Unplanned Simulation Button in Top-Right Corner */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '20px', marginRight: '180px' }}>
+            <div>
+              <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'monospace', textTransform: 'uppercase' }}>ACTIVE CLOSED-LOOP VECTOR</span>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#f8fafc', margin: '4px 0' }}>{course.toUpperCase()}</h2>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                Target: {totalDays} Days • Baseline: {dailyHours} hrs/day • <span style={{ color: '#34d399', fontWeight: 'bold' }}>Active Intensity: {potentialHours} hrs/day ⚡</span>
               </div>
             </div>
-          )}
 
-          {/* DASHBOARD HEADER */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000000', border: '1px solid #ffffff', padding: '20px', marginRight: '170px' }}>
+            {/* TOP-RIGHT UNPLANNED DAY SIMULATION TRIGGER BUTTON */}
             <div>
-              <span style={{ fontSize: '10px', textTransform: 'uppercase' }}>DOMAIN: {domain.toUpperCase()} | TARGET: {targetDurationMonths} MONTHS ({dailyHours} HRS/DAY)</span>
-              <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '4px 0 0 0' }}>Adaptive Visual Roadmap & Telemetry Hub</h2>
-            </div>
-            <div>
-              <button onClick={() => setShowSimulateModal(true)} style={{ background: '#000000', border: '1px solid #ffffff', color: '#ffffff', padding: '10px 16px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
+              <button 
+                onClick={() => setShowSimulateModal(true)} 
+                style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2))', border: '1px solid #fcd34d', color: '#fcd34d', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', boxShadow: '0 0 15px rgba(245, 158, 11, 0.3)' }}
+              >
                 ⚠️ Simulate Unplanned Gap
               </button>
             </div>
           </div>
 
-          {/* SIMULATION MODAL */}
+          {/* SIMULATION MODAL POPUP */}
           {showSimulateModal && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
-              <div style={{ background: '#000000', border: '1px solid #ffffff', padding: '30px', width: '380px' }}>
-                <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Simulate Unplanned Gap</h3>
-                <p style={{ fontSize: '11px', color: '#cccccc', marginBottom: '15px' }}>Total course completion duration stays constant via automatic compression.</p>
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+              <div style={{ background: '#0f172a', border: '1px solid #fcd34d', borderRadius: '20px', padding: '30px', width: '380px', boxShadow: '0 25px 50px rgba(0,0,0,0.9)', animation: 'fadeInScale 0.3s ease-out' }}>
+                <h3 style={{ fontSize: '16px', color: '#fcd34d', margin: '0 0 8px 0' }}>⚠️ Simulate Unplanned Disruption</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>Enter missed days. The engine will schedule mandatory revision/catch-up days FIRST before starting new topics!</p>
                 
-                <form onSubmit={handleApplyGapSimulation} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <input type="number" value={tempGapInput} onChange={e => setTempGapInput(e.target.value)} style={{ width: '100%', background: '#000000', border: '1px solid #ffffff', padding: '10px', color: '#ffffff', fontSize: '12px', boxSizing: 'border-box' }} min="1" max="5" required />
-                  <button type="submit" style={{ background: '#ffffff', color: '#000000', border: '1px solid #ffffff', padding: '10px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>Apply Gap & Open Revision Quiz 🔄</button>
+                <form onSubmit={handleApplySimulation} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>MISSED DAYS TO SIMULATE</label>
+                    <input type="number" value={tempMissedInput} onChange={e => setTempMissedInput(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '12px', color: '#fcd34d', fontSize: '14px', boxSizing: 'border-box' }} min="1" max="5" required />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                    <button type="submit" style={{ flex: 1, background: '#f59e0b', color: '#020617', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                      Apply & Prioritize Revision 🔄
+                    </button>
+                    <button type="button" onClick={() => setShowSimulateModal(false)} style={{ background: '#334155', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
           )}
 
-          {/* VISUAL ROADMAP GRID */}
-          <div style={{ background: '#000000', border: '1px solid #ffffff', padding: '25px' }}>
-            <h3 style={{ fontSize: '12px', margin: '0 0 15px 0' }}>🗺️ VISUAL ROADMAP (Constant Duration Timeline)</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-              {currentRoadmap.map((item) => {
-                const isRevision = item.type === 'revision';
-                return (
-                  <div key={item.day} style={{ border: '1px solid #ffffff', background: isRevision ? '#222222' : '#000000', padding: '15px' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 'bold', marginBottom: '4px', color: '#ffffff' }}>SLOT {item.day}</div>
-                    <div style={{ fontSize: '11px' }}>{item.label}</div>
-                  </div>
-                );
-              })}
+          {/* REVISION-FIRST NOTICE WHEN UNPLANNED DAYS > 0 */}
+          {unplannedMissed > 0 && (
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: '14px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: 'fadeInScale 0.4s ease-out' }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fcd34d' }}>🔄 Revision-First Adaptation Active ({unplannedMissed} Days Missed)</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>Roadmap successfully re-sequenced: <span style={{ color: '#fcd34d', fontWeight: 'bold' }}>Mandatory Revision & Catch-up slots are scheduled first</span> before new topic modules begin!</div>
+              </div>
+              <span style={{ background: '#f59e0b', color: '#020617', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>REVISION FIRST PROTOCOL</span>
             </div>
+          )}
+
+          {/* Navigation Tabs */}
+          <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '10px', overflowX: 'auto' }}>
+            <button onClick={() => setActiveTab('roadmap')} style={{ background: activeTab === 'roadmap' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              🗺️ Visual Roadmap & YouTube
+            </button>
+            <button onClick={() => setActiveTab('projects')} style={{ background: activeTab === 'projects' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              🛠️ Topic Projects & Interview Qs
+            </button>
+            <button onClick={() => setActiveTab('podcasts')} style={{ background: activeTab === 'podcasts' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              🎙️ Streak Podcasts
+            </button>
+            <button onClick={() => setActiveTab('jobs')} style={{ background: activeTab === 'jobs' ? '#6366f1' : '#0f172a', border: '1px solid #334155', color: '#fff', padding: '10px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              💼 Internships, Jobs & Networking
+            </button>
           </div>
+
+          {/* TAB 1: REVISION-FIRST ROADMAP GRID */}
+          {activeTab === 'roadmap' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🗺️ ADAPTIVE ROADMAP (REVISION SCHEDULED BEFORE NEW TOPICS)</h3>
+                  <span style={{ fontSize: '11px', color: '#34d399' }}>🔥 Streak: {completedDays.length} Days Completed</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '15px' }}>
+                  {currentRoadmap.map((item) => {
+                    const isDone = completedDays.includes(item.day);
+                    const isRevision = item.type === 'revision';
+                    return (
+                      <div 
+                        key={item.day} 
+                        onClick={() => setSelectedDay(item.day)}
+                        style={{ 
+                          background: isRevision ? 'rgba(245, 158, 11, 0.1)' : isDone ? 'rgba(52, 211, 153, 0.1)' : '#020617', 
+                          border: `1px solid ${selectedDay === item.day ? '#38bdf8' : isRevision ? '#f59e0b' : isDone ? '#34d399' : '#334155'}`, 
+                          borderRadius: '12px', 
+                          padding: '16px', 
+                          cursor: 'pointer',
+                          boxShadow: selectedDay === item.day ? '0 0 20px rgba(56, 189, 248, 0.3)' : 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'bold', color: isRevision ? '#fcd34d' : isDone ? '#34d399' : '#38bdf8', fontFamily: 'monospace' }}>DAY {item.day}</span>
+                          <span style={{ fontSize: '11px' }}>{isDone ? '✅ Studied' : '▶ Watch'}</span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px', lineHeight: '1.4' }}>
+                          {item.label}
+                        </div>
+                        <div style={{ fontSize: '10px', color: isRevision ? '#fcd34d' : '#94a3b8' }}>
+                          {isRevision ? '🔄 Catch-up & Revision' : `${dailyHours} hr session`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {selectedDay && (
+                <div style={{ background: '#0f172a', border: '1px solid #38bdf8', borderRadius: '16px', padding: '25px', animation: 'fadeInScale 0.4s ease-out' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ fontSize: '15px', color: '#38bdf8', margin: 0 }}>📺 DAY {selectedDay}: YOUTUBE VIDEO & RETENTION QUIZ</h3>
+                    <button onClick={() => setSelectedDay(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px' }}>✕ Close</button>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div style={{ background: '#020617', padding: '18px', borderRadius: '12px', border: '1px solid #334155' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>Curated YouTube Playlist / Lecture</div>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '15px' }}>Targeted content session matched to your revision-first workflow.</p>
+                      <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ background: '#ef4444', color: '#fff', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>
+                        Watch Video on YouTube ▶
+                      </a>
+                    </div>
+
+                    <div style={{ background: '#020617', padding: '18px', borderRadius: '12px', border: '1px solid #334155' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#34d399', marginBottom: '8px' }}>🧠 Day {selectedDay} Retention Quiz</div>
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '12px' }}>Verify your mastery over today's session.</p>
+                      <button onClick={() => toggleDay(selectedDay)} style={{ background: completedDays.includes(selectedDay) ? '#065f46' : '#6366f1', border: 'none', color: '#fff', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
+                        {completedDays.includes(selectedDay) ? '✓ Completed (Click to Undo)' : 'Complete Quiz & Mark Studied ✅'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: PROJECTS & INTERVIEW Qs */}
+          {activeTab === 'projects' && (
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🛠️ SUGGESTED HANDS-ON PROJECTS & TOPIC INTERVIEW QUESTIONS</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '6px' }}>Suggested Mini-Project for Current Milestone</div>
+                  <div style={{ fontSize: '12px', color: '#fff', fontWeight: 'bold', marginBottom: '6px' }}>Build a Real-Time Autonomous Dashboard Engine</div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>Apply the core concepts learned this week to construct a functional portfolio-ready project.</p>
+                </div>
+
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#34d399', marginBottom: '6px' }}>Top Topic Interview Questions</div>
+                  <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.6' }}>
+                    <div>• Q1: Explain core asynchronous execution flow.</div>
+                    <div>• Q2: How do you handle unexpected system state anomalies?</div>
+                    <div>• Q3: Optimize memory overhead in large data streams.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: STREAK PODCASTS */}
+          {activeTab === 'podcasts' && (
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🎙️ EXCLUSIVE AUDIO PODCASTS UNLOCKED FOR STREAK</h3>
+              <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#f8fafc' }}>Masterclass Audio: Architectural Deep Dive & Industry Secrets</div>
+                  <div style={{ fontSize: '11px', color: '#34d399', marginTop: '4px' }}>Unlocked because your streak is active ({completedDays.length} Days) 🎧</div>
+                </div>
+                <button style={{ background: '#818cf8', color: '#020617', border: 'none', padding: '10px 20px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  Play Audio Podcast ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: JOBS & NETWORKING */}
+          {activeTab === 'jobs' && (
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>💼 COURSE COMPLETION: INTERNSHIP/JOB TRICKS & NETWORKING</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#34d399', marginBottom: '6px' }}>Interview & Resume Mastery</div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>Direct blueprint on how to showcase {course} projects on GitHub and LinkedIn to get recruiter callbacks instantly.</p>
+                </div>
+                <div style={{ background: '#020617', border: '1px solid #334155', borderRadius: '14px', padding: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '6px' }}>Job & Internship Networking</div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>Cold outreach templates, referral strategies, and direct networking scripts for top-tier tech companies.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       )}
