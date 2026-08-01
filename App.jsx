@@ -6,16 +6,9 @@ import {
   Radio, 
   Briefcase, 
   ArrowRight, 
-  CheckCircle2, 
   Play, 
-  X, 
   AlertTriangle, 
-  Video, 
-  Clock, 
-  Settings, 
-  User, 
-  Sparkles,
-  ChevronRight
+  Sparkles
 } from 'lucide-react';
 
 export default function App() {
@@ -23,37 +16,32 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Feature 1 Inputs
+  // Roadmap & Input States
   const [course, setCourse] = useState('');
   const [dailyHours, setDailyHours] = useState('2');
   const [totalDays, setTotalDays] = useState('30');
   
-  // Feature 2 Inputs (Planned vs Unplanned Disruptions)
+  // Disruption & Tracking
   const [unplannedMissed, setUnplannedMissed] = useState(0); 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [tempMissedInput, setTempMissedInput] = useState('2');
 
-  // App State & Tracking
   const [activeTab, setActiveTab] = useState('roadmap');
   const [completedDays, setCompletedDays] = useState([1]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [potentialHours, setPotentialHours] = useState(2);
 
-  // Feature 5: Real Webcam & Live Distraction Monitoring State
-  const [boredomAlert, setBoredomAlert] = useState(false);
+  // Real Webcam & distraction telemetry states
   const [engagementScore, setEngagementScore] = useState(94);
   const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
-  const [isModelReady, setIsModelReady] = useState(false);
   const [detectedStatus, setDetectedStatus] = useState('Initializing Vision Telemetry...');
 
-  // Refs for continuous live webcam stream and processing
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const analysisIntervalRef = useRef(null);
 
-  // Text-to-speech speaker helper using laptop speakers
   const speakMessage = (text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -64,7 +52,7 @@ export default function App() {
     }
   };
 
-  // Real Computer Vision Frame Analyzer (Pixel brightness & movement heuristics simulating live attention tracking)
+  // Actual computer vision pixel check for real distraction/absence monitoring
   const analyzeVideoFrame = () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
@@ -80,7 +68,6 @@ export default function App() {
     const frameData = context.getImageData(0, 0, canvas.width, canvas.height);
     const pixels = frameData.data;
 
-    // Calculate average brightness and center concentration to detect absence or heavy looking away
     let totalBrightness = 0;
     for (let i = 0; i < pixels.length; i += 4) {
       const avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
@@ -88,7 +75,7 @@ export default function App() {
     }
     const avgBrightness = totalBrightness / (pixels.length / 4);
 
-    // Real condition check: If room is pitch dark, user walked away, or screen is blocked
+    // If dark or user steps away
     if (avgBrightness < 15) {
       setDetectedStatus('Status: User Absent / Low Light');
       triggerRealDistractionProtocol("Hey! You seem to have walked away or covered the camera. Get back to your study stream!");
@@ -99,7 +86,7 @@ export default function App() {
 
   const triggerRealDistractionProtocol = (message) => {
     if (!funnyChallengeActive) {
-      setBoredomAlert(true);
+      setBoredomAlertState(true);
       setFunnyChallengeActive(true);
       setTimeLeft(20);
       setEngagementScore(prev => Math.max(40, prev - 15));
@@ -107,7 +94,8 @@ export default function App() {
     }
   };
 
-  // Automatically start webcam and real analysis loop when dashboard opens
+  const [boredomAlert, setBoredomAlertState] = useState(false);
+
   useEffect(() => {
     if (view === 'dashboard') {
       const startCameraAndMonitoring = async () => {
@@ -120,10 +108,8 @@ export default function App() {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
-          setIsModelReady(true);
           setDetectedStatus('Status: Live Telemetry Online');
 
-          // Check frame every 4 seconds for actual user presence and engagement
           analysisIntervalRef.current = setInterval(() => {
             analyzeVideoFrame();
           }, 4000);
@@ -148,7 +134,6 @@ export default function App() {
     };
   }, [view]);
 
-  // 20-second countdown timer for distraction mode
   useEffect(() => {
     let timer;
     if (funnyChallengeActive && timeLeft > 0) {
@@ -157,7 +142,7 @@ export default function App() {
       }, 1000);
     } else if (timeLeft === 0 && funnyChallengeActive) {
       setFunnyChallengeActive(false);
-      setBoredomAlert(false);
+      setBoredomAlertState(false);
       speakMessage("Welcome back! Let's crush this roadmap!");
     }
     return () => clearInterval(timer);
@@ -240,10 +225,9 @@ export default function App() {
         }
       `}</style>
 
-      {/* Hidden canvas for real computer vision processing */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* MINIMALIST APPLE/VERCEL NAVBAR */}
+      {/* NAVBAR */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px', padding: '0 40px', borderBottom: '1px solid #2A2A2A', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setView('landing')}>
           <div style={{ width: '16px', height: '16px', background: '#FFFFFF', borderRadius: '4px' }} />
@@ -265,7 +249,7 @@ export default function App() {
         </div>
       </nav>
 
-      {/* VIEW 1: LANDING */}
+      {/* LANDING */}
       {view === 'landing' && (
         <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center', animation: 'fadeInScale 0.4s ease-out' }}>
           <div style={{ maxWidth: '720px' }}>
@@ -291,7 +275,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 2: SIGN IN */}
+      {/* SIGN IN */}
       {view === 'signin' && (
         <div style={{ maxWidth: '420px', margin: '80px auto', background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '40px', animation: 'fadeInScale 0.3s ease-out' }}>
           <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>Welcome back</h2>
@@ -316,7 +300,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 3: CONFIGURATION */}
+      {/* PLAN INPUT */}
       {view === 'plan-input' && (
         <div style={{ maxWidth: '480px', margin: '60px auto', background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '40px', animation: 'fadeInScale 0.3s ease-out' }}>
           <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>Roadmap Configuration</h2>
@@ -352,11 +336,11 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 4: DASHBOARD */}
+      {/* DASHBOARD */}
       {view === 'dashboard' && (
         <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '32px', animation: 'fadeInScale 0.3s ease-out' }}>
           
-          {/* FLOATING LIVE WEBCAM FEED WITH STATUS */}
+          {/* FLOATING REAL WEBCAM */}
           <div style={{ position: 'fixed', bottom: '24px', right: '24px', width: '200px', background: '#0F0F0F', border: `1px solid ${boredomAlert ? '#FFFFFF' : '#2A2A2A'}`, borderRadius: '16px', overflow: 'hidden', zIndex: 150, boxShadow: '0 20px 40px rgba(0,0,0,0.8)' }}>
             <div style={{ position: 'relative', width: '100%', height: '135px' }}>
               <video 
@@ -367,7 +351,7 @@ export default function App() {
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} 
               />
               <div style={{ position: 'absolute', bottom: '6px', left: '6px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', color: '#00FF66', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', background: '#00FF66', borderRadius: '50%' }} /> LIVE VISION
+                <span style={{ width: '6px', height: '6px', background: '#00FF66', borderRadius: '50%' }} /> REAL VISION ACTIVE
               </div>
             </div>
             <div style={{ padding: '8px 10px', background: '#171717', borderTop: '1px solid #2A2A2A', fontSize: '10px', color: '#A1A1AA', fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -375,15 +359,15 @@ export default function App() {
             </div>
           </div>
 
-          {/* REAL DISTRACTION ALERT MODAL */}
+          {/* REAL ATTENTION LOSS MODAL */}
           {funnyChallengeActive && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 200, padding: '24px', textAlign: 'center' }}>
               <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '24px', padding: '48px', maxWidth: '440px', width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ width: '48px', height: '48px', background: '#171717', border: '1px solid #2A2A2A', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
                   <AlertTriangle size={24} color="#FFFFFF" />
                 </div>
-                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0' }}>Attention Drop Detected</h2>
-                <p style={{ fontSize: '14px', color: '#A1A1AA', margin: '0 0 24px 0', lineHeight: '1.5' }}>Our computer vision telemetry noted absence or distraction. Take a quick 20-second recalibration break.</p>
+                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 8px 0' }}>Real Distraction Captured</h2>
+                <p style={{ fontSize: '14px', color: '#A1A1AA', margin: '0 0 24px 0', lineHeight: '1.5' }}>Your camera stream detected absence or lack of focus. Recalibrating real engagement window.</p>
                 
                 <div style={{ fontSize: '36px', fontWeight: '700', color: '#FFFFFF', fontFamily: 'monospace', marginBottom: '24px' }}>
                   00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
@@ -396,7 +380,7 @@ export default function App() {
             </div>
           )}
 
-          {/* DASHBOARD HEADER */}
+          {/* HEADER */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px' }}>
             <div>
               <span style={{ fontSize: '12px', color: '#71717A', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Active Learning Vector</span>
@@ -412,8 +396,8 @@ export default function App() {
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button 
-                onClick={() => triggerRealDistractionProtocol("Manual check triggered. Let's focus back on track!")} 
-                style={{ background: 'transparent', border: '1px solid #2A2A2A', color: '#FFFFFF', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
+                onClick={() => triggerRealDistractionProtocol("Manual vision check triggered. Focus back on track!")} 
+                style={{ background: '#FFFFFF', color: '#000000', border: 'none', padding: '10px 18px', borderRadius: '12px', fontWeight: '500', fontSize: '13px', cursor: 'pointer' }}
               >
                 Test Vision Alert
               </button>
@@ -426,7 +410,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* SIMULATION MODAL */}
           {showSimulateModal && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '24px' }}>
               <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
@@ -451,7 +434,6 @@ export default function App() {
             </div>
           )}
 
-          {/* REVISION NOTICE */}
           {unplannedMissed > 0 && (
             <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -462,7 +444,7 @@ export default function App() {
             </div>
           )}
 
-          {/* NAVIGATION TABS */}
+          {/* TABS */}
           <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #2A2A2A', paddingBottom: '16px', overflowX: 'auto' }}>
             {[
               { id: 'roadmap', label: 'Roadmap', icon: Compass },
@@ -498,7 +480,6 @@ export default function App() {
             })}
           </div>
 
-          {/* TAB CONTENT: ROADMAP */}
           {activeTab === 'roadmap' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px' }}>
@@ -521,8 +502,7 @@ export default function App() {
                           border: `1px solid ${isSelected ? '#FFFFFF' : '#2A2A2A'}`, 
                           borderRadius: '16px', 
                           padding: '20px', 
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s ease, border-color 0.2s ease'
+                          cursor: 'pointer' 
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -542,7 +522,7 @@ export default function App() {
               </div>
 
               {selectedDay && (
-                <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', animation: 'fadeInScale 0.3s ease-out' }}>
+                <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Day {selectedDay} Module</h3>
                     <button onClick={() => setSelectedDay(null)} style={{ background: 'transparent', border: 'none', color: '#A1A1AA', cursor: 'pointer', fontSize: '14px' }}>Close</button>
@@ -570,18 +550,15 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: PROJECTS & INTERVIEWS */}
           {activeTab === 'projects' && (
             <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Milestone Projects & Telemetry Q&A</h3>
-              
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px' }}>
                   <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>Applied Project Vector</div>
                   <div style={{ fontSize: '14px', fontWeight: '500', color: '#A1A1AA', marginBottom: '12px' }}>Autonomous Real-Time Interface Engine</div>
                   <p style={{ fontSize: '13px', color: '#71717A', lineHeight: '1.5' }}>Synthesize theoretical concepts into a production-grade portfolio deliverable.</p>
                 </div>
-
                 <div style={{ background: '#171717', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px' }}>
                   <div style={{ fontSize: '14px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>Core Evaluative Questions</div>
                   <div style={{ fontSize: '13px', color: '#A1A1AA', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
@@ -594,7 +571,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 3: PODCASTS */}
           {activeTab === 'podcasts' && (
             <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Streak Audio Briefs</h3>
@@ -610,7 +586,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 4: CAREER VECTOR */}
           {activeTab === 'jobs' && (
             <div style={{ background: '#0F0F0F', border: '1px solid #2A2A2A', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0, letterSpacing: '-0.3px' }}>Career & Networking Vector</h3>
