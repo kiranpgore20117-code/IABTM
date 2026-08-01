@@ -21,7 +21,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [potentialHours, setPotentialHours] = useState(2);
 
-  // Feature 5: Continuous Camera & 20s Distraction Fun Refresher State
+  // Feature 5: Continuous Camera & 6s Distraction Fun Refresher State
   const [boredomAlert, setBoredomAlert] = useState(false);
   const [engagementScore, setEngagementScore] = useState(94);
   const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
@@ -77,18 +77,19 @@ export default function App() {
 
       startCameraAutomatically();
 
+      // Changed interval check time limit to 6 seconds
       interval = setInterval(() => {
         const randomEvent = Math.random();
-        if (randomEvent > 0.6) {
+        if (randomEvent > 0.5) {
           setBoredomAlert(true);
           setFunnyChallengeActive(true);
           setTimeLeft(20);
           setEngagementScore(prev => Math.max(50, prev - 20));
-          speakMessage("Hey buddy! You look totally distracted! Let's take a 20 second funny brain break right now!");
+          speakMessage("Hey buddy! You look totally distracted! Let's take a quick 20 second funny brain break right now!");
         } else {
           setBoredomAlert(false);
         }
-      }, 12000);
+      }, 6000);
     }
 
     return () => {
@@ -205,7 +206,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 1: LANDING (Fixed inline text layout without letter dropping down onto new lines) */}
+      {/* VIEW 1: LANDING */}
       {view === 'landing' && (
         <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
           
