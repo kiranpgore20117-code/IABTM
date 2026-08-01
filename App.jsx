@@ -41,7 +41,7 @@ export default function App() {
     setParticles(pts);
 
     const cards = [
-      { id: 1, title: '⚡ AUTONOMOUS ADAPTATION', desc: 'Recalibrates roadmap instantly by condensing missed modules into double-topics.', x: '5%', y: '25%', duration: '8s', delay: '0s' },
+      { id: 1, title: '⚡ CLOSED-LOOP REVISION', desc: 'Missed days force an automated revision buffer before new topics unlock.', x: '5%', y: '25%', duration: '8s', delay: '0s' },
       { id: 2, title: '🧠 CAMERA ENGAGEMENT', desc: 'Detects fatigue & boosts momentum without distraction.', x: '73%', y: '20%', duration: '10s', delay: '1s' },
       { id: 3, title: '🛠️ PROJECT & INTERVIEW', desc: 'Embedded projects, interview tricks & job networking.', x: '6%', y: '68%', duration: '9s', delay: '2s' },
       { id: 4, title: '🎙️ STREAK PODCASTS', desc: 'Unlocks expert audio breakdowns upon streak completion.', x: '72%', y: '65%', duration: '11s', delay: '1.5s' }
@@ -80,7 +80,6 @@ export default function App() {
     e.preventDefault();
     const missed = parseInt(tempMissedInput) || 0;
     setUnplannedMissed(missed);
-    // Automatically boost hours or compress topics to compensate
     setPotentialHours(prev => prev + Math.min(2, missed));
     setShowSimulateModal(false);
   };
@@ -99,32 +98,34 @@ export default function App() {
   const totalDaysCount = parseInt(totalDays) || 30;
   const baseRoadmapDaysArray = Array.from({ length: Math.min(totalDaysCount, 15) }, (_, i) => i + 1);
 
-  // DYNAMIC COMPRESSION ENGINE: If unplanned days are added, group topics into 2-in-1 accelerated slots!
+  // REVISION-FIRST ENGINE: If unplanned days are simulated, inject a mandatory Revision & Catch-up block FIRST before subsequent new topics start!
   const getDynamicRoadmap = () => {
-    if (unplannedMissed <= 0) return baseRoadmapDaysArray.map(d => ({ day: d, isCompressed: false, label: `Module Vector ${d}` }));
-    
-    // Compress roadmap items to account for missed days
-    const compressed = [];
-    let topicCounter = 1;
-    for (let i = 1; i <= Math.max(5, baseRoadmapDaysArray.length - unplannedMissed); i++) {
-      if (i <= unplannedMissed) {
-        compressed.push({
-          day: i,
-          isCompressed: true,
-          label: `⚡ COMPRESSED: Topics ${topicCounter} & ${topicCounter + 1} Combined (2 Topics in 1 Day!)`,
-          topics: [topicCounter, topicCounter + 1]
-        });
-        topicCounter += 2;
-      } else {
-        compressed.push({
-          day: i,
-          isCompressed: false,
-          label: `Module Vector ${topicCounter}`,
-          topics: [topicCounter]
-        });
-        topicCounter += 1;
-      }
+    if (unplannedMissed <= 0) {
+      return baseRoadmapDaysArray.map(d => ({ day: d, type: 'normal', label: `Module Vector ${d}` }));
     }
+
+    const compressed = [];
+    
+    // Step 1: Inject Revision / Catch-up days first based on missed gap
+    for (let r = 1; r <= unplannedMissed; r++) {
+      compressed.push({
+        day: r,
+        type: 'revision',
+        label: `🔄 MANDATORY REVISION: Catching up on Missed Gap #${r}`
+      });
+    }
+
+    // Step 2: Followed immediately by new topics
+    let topicCounter = 1;
+    for (let i = unplannedMissed + 1; i <= Math.min(15, baseRoadmapDaysArray.length); i++) {
+      compressed.push({
+        day: i,
+        type: 'new',
+        label: `✨ New Topic Module Vector ${topicCounter}`
+      });
+      topicCounter++;
+    }
+
     return compressed;
   };
 
@@ -201,7 +202,7 @@ export default function App() {
             </h1>
 
             <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '25px', marginBottom: '35px', lineHeight: '1.6', animation: 'fadeInScale 1s ease-out 0.8s both' }}>
-              Autonomous Closed-Loop Learning Engine with Dynamic 2-in-1 Topic Compression, Camera Boredom Boosters & Embedded Projects.
+              Autonomous Closed-Loop Learning Engine with Mandatory Revision-First Gap Recovery & Camera Boredom Boosters.
             </p>
 
             <div style={{ animation: 'fadeInScale 1s ease-out 1s both' }}>
@@ -238,7 +239,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 3: CLEAN INITIAL CONFIG (No Unplanned Days asked here) */}
+      {/* VIEW 3: CLEAN CONFIG (No unplanned days asked here) */}
       {view === 'plan-input' && (
         <div style={{ maxWidth: '480px', margin: '40px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
           <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>CUSTOM ROADMAP CONFIG</h2>
@@ -304,7 +305,7 @@ export default function App() {
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
               <div style={{ background: '#0f172a', border: '1px solid #fcd34d', borderRadius: '20px', padding: '30px', width: '380px', boxShadow: '0 25px 50px rgba(0,0,0,0.9)', animation: 'fadeInScale 0.3s ease-out' }}>
                 <h3 style={{ fontSize: '16px', color: '#fcd34d', margin: '0 0 8px 0' }}>⚠️ Simulate Unplanned Disruption</h3>
-                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>Enter missed days. The engine will instantly rewrite your roadmap to cover 2 topics in 1 day to catch up!</p>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>Enter missed days. The engine will schedule mandatory revision/catch-up days FIRST before starting new topics!</p>
                 
                 <form onSubmit={handleApplySimulation} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   <div>
@@ -313,7 +314,7 @@ export default function App() {
                   </div>
                   <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                     <button type="submit" style={{ flex: 1, background: '#f59e0b', color: '#020617', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
-                      Apply & Compress Roadmap ⚡
+                      Apply & Prioritize Revision 🔄
                     </button>
                     <button type="button" onClick={() => setShowSimulateModal(false)} style={{ background: '#334155', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', cursor: 'pointer' }}>
                       Cancel
@@ -324,7 +325,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Camera & Boredom Telemetry Bar */}
+          {/* Camera Telemetry Bar */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
             <div style={{ background: camActive ? '#090d16' : '#0f172a', border: `1px solid ${boredomAlert ? '#ef4444' : '#1e293b'}`, borderRadius: '16px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: boredomAlert ? 'pulseGlow 2s infinite' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -347,14 +348,14 @@ export default function App() {
             </div>
           </div>
 
-          {/* DYNAMIC RECALIBRATION NOTICE WHEN UNPLANNED DAYS > 0 */}
+          {/* REVISION-FIRST NOTICE WHEN UNPLANNED DAYS > 0 */}
           {unplannedMissed > 0 && (
             <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: '14px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: 'fadeInScale 0.4s ease-out' }}>
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fcd34d' }}>⚠️ Autonomous Gap Adaptation Triggered ({unplannedMissed} Days Missed)</div>
-                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>Roadmap successfully rewritten! Modules have been intelligently combined so you now cover <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>2 topics in 1 day</span> to stay on schedule.</div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fcd34d' }}>🔄 Revision-First Adaptation Active ({unplannedMissed} Days Missed)</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>Roadmap successfully re-sequenced: <span style={{ color: '#fcd34d', fontWeight: 'bold' }}>Mandatory Revision & Catch-up slots are scheduled first</span> before new topic modules begin!</div>
               </div>
-              <span style={{ background: '#f59e0b', color: '#020617', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>2-IN-1 MODE ACTIVE</span>
+              <span style={{ background: '#f59e0b', color: '#020617', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>REVISION FIRST PROTOCOL</span>
             </div>
           )}
 
@@ -374,25 +375,26 @@ export default function App() {
             </button>
           </div>
 
-          {/* TAB 1: DYNAMICALLY COMPRESSED ROADMAP */}
+          {/* TAB 1: REVISION-FIRST ROADMAP GRID */}
           {activeTab === 'roadmap' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '25px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🗺️ ADAPTIVE ROADMAP GRID (CLICK ANY DAY FOR YOUTUBE & QUIZ)</h3>
+                  <h3 style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace', margin: 0 }}>🗺️ ADAPTIVE ROADMAP (REVISION SCHEDULED BEFORE NEW TOPICS)</h3>
                   <span style={{ fontSize: '11px', color: '#34d399' }}>🔥 Streak: {completedDays.length} Days Completed</span>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '15px' }}>
                   {currentRoadmap.map((item) => {
                     const isDone = completedDays.includes(item.day);
+                    const isRevision = item.type === 'revision';
                     return (
                       <div 
                         key={item.day} 
                         onClick={() => setSelectedDay(item.day)}
                         style={{ 
-                          background: item.isCompressed ? 'rgba(245, 158, 11, 0.08)' : isDone ? 'rgba(52, 211, 153, 0.1)' : '#020617', 
-                          border: `1px solid ${selectedDay === item.day ? '#38bdf8' : item.isCompressed ? '#f59e0b' : isDone ? '#34d399' : '#334155'}`, 
+                          background: isRevision ? 'rgba(245, 158, 11, 0.1)' : isDone ? 'rgba(52, 211, 153, 0.1)' : '#020617', 
+                          border: `1px solid ${selectedDay === item.day ? '#38bdf8' : isRevision ? '#f59e0b' : isDone ? '#34d399' : '#334155'}`, 
                           borderRadius: '12px', 
                           padding: '16px', 
                           cursor: 'pointer',
@@ -400,14 +402,14 @@ export default function App() {
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 'bold', color: item.isCompressed ? '#fcd34d' : isDone ? '#34d399' : '#38bdf8', fontFamily: 'monospace' }}>DAY {item.day}</span>
+                          <span style={{ fontSize: '11px', fontWeight: 'bold', color: isRevision ? '#fcd34d' : isDone ? '#34d399' : '#38bdf8', fontFamily: 'monospace' }}>DAY {item.day}</span>
                           <span style={{ fontSize: '11px' }}>{isDone ? '✅ Studied' : '▶ Watch'}</span>
                         </div>
                         <div style={{ fontSize: '11px', color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px', lineHeight: '1.4' }}>
                           {item.label}
                         </div>
-                        <div style={{ fontSize: '10px', color: item.isCompressed ? '#fcd34d' : '#94a3b8' }}>
-                          {item.isCompressed ? '⚡ 2 Topics in 1 Day' : `${dailyHours} hr session`}
+                        <div style={{ fontSize: '10px', color: isRevision ? '#fcd34d' : '#94a3b8' }}>
+                          {isRevision ? '🔄 Catch-up & Revision' : `${dailyHours} hr session`}
                         </div>
                       </div>
                     );
@@ -418,14 +420,14 @@ export default function App() {
               {selectedDay && (
                 <div style={{ background: '#0f172a', border: '1px solid #38bdf8', borderRadius: '16px', padding: '25px', animation: 'fadeInScale 0.4s ease-out' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                    <h3 style={{ fontSize: '15px', color: '#38bdf8', margin: 0 }}>📺 DAY {selectedDay}: YOUTUBE VIDEO & ACCELERATED QUIZ</h3>
+                    <h3 style={{ fontSize: '15px', color: '#38bdf8', margin: 0 }}>📺 DAY {selectedDay}: YOUTUBE VIDEO & RETENTION QUIZ</h3>
                     <button onClick={() => setSelectedDay(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px' }}>✕ Close</button>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div style={{ background: '#020617', padding: '18px', borderRadius: '12px', border: '1px solid #334155' }}>
                       <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>Curated YouTube Playlist / Lecture</div>
-                      <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '15px' }}>Optimized lecture breakdown matching your compressed daily sprint.</p>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '15px' }}>Targeted content session matched to your revision-first workflow.</p>
                       <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ background: '#ef4444', color: '#fff', padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontSize: '11px', fontWeight: 'bold', display: 'inline-block' }}>
                         Watch Video on YouTube ▶
                       </a>
@@ -433,7 +435,7 @@ export default function App() {
 
                     <div style={{ background: '#020617', padding: '18px', borderRadius: '12px', border: '1px solid #334155' }}>
                       <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#34d399', marginBottom: '8px' }}>🧠 Day {selectedDay} Retention Quiz</div>
-                      <p style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '12px' }}>Verify your mastery over today's double topics.</p>
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '12px' }}>Verify your mastery over today's session.</p>
                       <button onClick={() => toggleDay(selectedDay)} style={{ background: completedDays.includes(selectedDay) ? '#065f46' : '#6366f1', border: 'none', color: '#fff', padding: '10px 18px', borderRadius: '8px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}>
                         {completedDays.includes(selectedDay) ? '✓ Completed (Click to Undo)' : 'Complete Quiz & Mark Studied ✅'}
                       </button>
