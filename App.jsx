@@ -1,191 +1,192 @@
 import React, { useState } from 'react';
-import { Sparkles, Brain, ShieldAlert, CheckCircle2, AlertCircle, RefreshCw, Calendar, TrendingUp, Sliders, Activity, Terminal, Shield, Cpu, Compass } from 'lucide-react';
+import { Brain, Zap, AlertTriangle, CalendarClock, Target, BarChart3, XCircle, CheckCircle2 } from 'lucide-react';
 
-export default function App() {
-  const [goal, setGoal] = useState('Pass AWS Solutions Architect Exam');
-  const [gapMode, setGapMode] = useState('planned'); // 'planned', 'silent', 'none'
-  const [activeTab, setActiveTab] = useState('telemetry');
+function App() {
+  const [goal, setGoal] = useState('AWS Solutions Architect Certification');
+  const [gapType, setGapType] = useState('none'); // 'none', 'planned', 'silent'
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-indigo-500 selection:text-white flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-cyan-600 selection:text-white relative overflow-hidden">
       
-      {/* Top Tactical Header */}
-      <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur px-6 py-3 flex justify-between items-center z-50">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-indigo-950/80 border border-indigo-700/50 rounded-xl">
-            <Brain className="text-indigo-400 w-5 h-5 animate-pulse" />
-          </div>
-          <div>
-            <div className="font-black text-sm tracking-wider bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-              HBTM PERSONAL LEARNING AGENT[cite: 1]
-            </div>
-            <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">
-              Autonomous Closed-Loop Tutor & Tactical Control Override[cite: 1]
-            </div>
-          </div>
-        </div>
+      {/* Futuristic Background Effects */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/30 rounded-full blur-[150px] pointer-events-none"></div>
 
-        <div className="hidden md:flex items-center space-x-3 bg-slate-900/80 border border-slate-800 px-4 py-1.5 rounded-xl text-xs font-mono">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span className="text-slate-400">OPERATOR:</span>
-          <span className="text-cyan-400 font-semibold">TEAM_VOLT_AGENT_CORE[cite: 1]</span>
+      {/* Header */}
+      <header className="border-b border-slate-800/70 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50 px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-cyan-950/70 border border-cyan-800">
+            <Brain className="w-7 h-7 text-cyan-400" />
+          </div>
+          <h1 className="text-2xl font-black tracking-tighter">
+            HBTM <span className="text-cyan-400">Learning Agent[cite: 1]</span>
+          </h1>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">v0.1 Beta[cite: 1]</span>
+        </div>
+        <div className="flex items-center gap-3 text-sm font-mono text-slate-400">
+           <span>Status:</span>
+           <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+             <span className="relative flex h-3 w-3">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+             </span>
+             ONLINE
+           </div>
+           <span>|</span>
+           <div className="text-cyan-400">Core: TILT_ENGINE_ACTIVE</div>
         </div>
       </header>
 
-      {/* Main Split-Screen Tactical Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      {/* Main Content Grid */}
+      <main className="grid grid-cols-1 xl:grid-cols-[2fr,1fr] gap-8 p-8 max-w-[1800px] mx-auto relative z-10">
         
-        {/* Left Control Panel (Telemetry & Gap Simulation) */}
-        <div className="lg:col-span-5 border-r border-slate-800/80 bg-slate-950/60 p-5 overflow-y-auto space-y-4 max-h-[calc(100vh-65px)]">
+        {/* LEFT COLUMN: Simulator & Adaptive Plan */}
+        <div className="space-y-8">
           
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-mono tracking-wider text-slate-400 uppercase flex items-center space-x-2">
-              <Terminal className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Intent & Behavior Engine[cite: 1]</span>
-            </span>
-            <span className="text-[10px] px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded font-mono">LIVE SYNC</span>
-          </div>
-
-          {/* Goal Intake Card */}
-          <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-xl">
-            <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">Active Learner Goal[cite: 1]</label>
-            <input
+          {/* 1. Goal Setting Card */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-black/30">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-indigo-950 rounded-2xl border border-indigo-800"><Target className="w-7 h-7 text-indigo-400"/></div>
+              <div>
+                <h2 className="text-xl font-bold">Define Your Learning Goal[cite: 1]</h2>
+                <p className="text-slate-400 text-sm">Set the objective for the agent to start building a resilient plan.</p>
+              </div>
+            </div>
+            <input 
               type="text"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-indigo-300 font-mono focus:outline-none focus:border-indigo-500"
+              placeholder="e.g., Learn React in 30 days[cite: 1]"
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-2xl px-6 py-4 text-lg placeholder:text-slate-600 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-600 transition"
             />
           </div>
 
-          {/* Gap Selector Telemetry */}
-          <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
-            <div className="text-[11px] font-mono text-slate-400 uppercase">Simulate Real-Life Disruption[cite: 1]</div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setGapMode('planned')}
-                className={`p-2.5 rounded-xl border text-left transition ${
-                  gapMode === 'planned' 
-                    ? 'border-indigo-500 bg-indigo-950/60 text-indigo-200' 
-                    : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
-                }`}
-              >
-                <div className="font-bold text-xs flex items-center justify-between">
-                  <span>Planned Gap</span>
-                  {gapMode === 'planned' && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping"></span>}
-                </div>
-                <div className="text-[9px] text-slate-400 mt-0.5">Exams flagged ahead[cite: 1]</div>
+          {/* 2. Gap Simulator Card */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-black/30">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-amber-950 rounded-2xl border border-amber-800"><AlertTriangle className="w-7 h-7 text-amber-400"/></div>
+              <div>
+                <h2 className="text-xl font-bold">Real-Life Gap Simulator[cite: 1]</h2>
+                <p className="text-slate-400 text-sm">Simulate human behavior to see how the agent handles "Planned" vs "Silent" gaps[cite: 1].</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <button 
+                onClick={() => setGapType('none')}
+                className={`p-6 rounded-2xl border-2 text-center transition hover:border-cyan-600 group ${gapType === 'none' ? 'bg-cyan-950/50 border-cyan-600' : 'bg-slate-800/30 border-slate-700'}`}>
+                <div className="font-bold text-lg text-white mb-1">No Gap</div>
+                <div className="text-xs text-slate-400 group-hover:text-slate-200">Ideal execution[cite: 1]</div>
               </button>
-
-              <button
-                onClick={() => setGapMode('silent')}
-                className={`p-2.5 rounded-xl border text-left transition ${
-                  gapMode === 'silent' 
-                    ? 'border-amber-500 bg-amber-950/50 text-amber-200' 
-                    : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
-                }`}
-              >
-                <div className="font-bold text-xs flex items-center justify-between">
-                  <span>Silent Gap</span>
-                  {gapMode === 'silent' && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>}
-                </div>
-                <div className="text-[9px] text-slate-400 mt-0.5">Unexpected drop / idle[cite: 1]</div>
+              <button 
+                onClick={() => setGapType('planned')}
+                className={`p-6 rounded-2xl border-2 text-center transition hover:border-indigo-600 group ${gapType === 'planned' ? 'bg-indigo-950/50 border-indigo-600' : 'bg-slate-800/30 border-slate-700'}`}>
+                <div className="font-bold text-lg text-white mb-1">Planned Gap</div>
+                <div className="text-xs text-slate-400 group-hover:text-slate-200">Vacation, Exams flagged[cite: 1]</div>
+              </button>
+              <button 
+                onClick={() => setGapType('silent')}
+                className={`p-6 rounded-2xl border-2 text-center transition hover:border-amber-600 group ${gapType === 'silent' ? 'bg-amber-950/50 border-amber-600' : 'bg-slate-800/30 border-slate-700'}`}>
+                <div className="font-bold text-lg text-white mb-1">Silent Gap</div>
+                <div className="text-xs text-slate-400 group-hover:text-slate-200">Unexpected drop[cite: 1]</div>
               </button>
             </div>
           </div>
 
-          {/* Core Telemetry Metrics */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Plan Completion[cite: 1]</div>
-              <div className="text-xl font-black font-mono text-indigo-400 mt-1">80%[cite: 1]</div>
-              <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2 border border-slate-800">
-                <div className="bg-indigo-500 h-full rounded-full w-[80%]"></div>
+          {/* 3. Adaptive Plan Visualization Card */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-black/30 min-h-[300px]">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-cyan-950 rounded-2xl border border-cyan-800"><CalendarClock className="w-7 h-7 text-cyan-400"/></div>
+              <div>
+                <h2 className="text-xl font-bold">Live Adaptive Plan[cite: 1]</h2>
+                <p className="text-slate-400 text-sm">Agent is reasoning and self-correcting based on intent and gaps[cite: 1].</p>
               </div>
             </div>
-
-            <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Networking Confidence[cite: 1]</div>
-              <div className="text-xl font-black font-mono text-amber-400 mt-1">45%[cite: 1]</div>
-              <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2 border border-slate-800">
-                <div className="bg-amber-500 h-full rounded-full w-[45%]"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Explainable Changes Log */}
-          <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-2">
-            <div className="text-[10px] font-mono text-slate-400 uppercase flex items-center space-x-1.5">
-              <Sliders className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Explainable Plan Modifications[cite: 1]</span>
-            </div>
-            <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-3 text-[11px] font-mono text-slate-300 space-y-1">
-              <div className="text-indigo-400 font-semibold">State Engine Status: ACTIVE</div>
-              <div>• Quiz on Subnets: 40% (Remedial tasks inserted)[cite: 1]</div>
-              <div>• Milestone delayed by 2 days smoothly[cite: 1]</div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right Tactical Interactive Workspace / Visualizer */}
-        <div className="lg:col-span-7 bg-[#02040a] p-6 relative flex flex-col justify-between overflow-hidden">
-          
-          {/* Background Grid Lines simulation */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
-
-          {/* Top Status HUD inside Visualizer */}
-          <div className="relative z-10 flex justify-between items-center bg-slate-900/60 border border-slate-800/80 px-4 py-3 rounded-2xl backdrop-blur">
-            <div className="flex items-center space-x-2">
-              <Cpu className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
-              <span className="text-xs font-mono text-slate-200">AUTONOMOUS REASONING MAP</span>
-            </div>
-            <div className="text-[10px] font-mono px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800 rounded-lg">
-              SYSTEM: OPTIMIZED[cite: 1]
-            </div>
-          </div>
-
-          {/* Center Dynamic Visual Simulation Box */}
-          <div className="relative z-10 my-auto py-8 flex flex-col items-center justify-center text-center space-y-4">
             
-            <div className="relative">
-              <div className="absolute -inset-4 bg-indigo-500/10 rounded-full blur-xl animate-pulse"></div>
-              <div className="relative w-24 h-24 bg-slate-900 border-2 border-indigo-500/50 rounded-3xl flex items-center justify-center shadow-2xl">
-                <Compass className="w-10 h-10 text-indigo-400 animate-bounce" />
-              </div>
+            {/* Dynamic Content based on Gap Type */}
+            <div className="font-mono text-sm border border-dashed border-slate-700 rounded-2xl p-6 bg-slate-800/30 space-y-4">
+              {gapType === 'none' && (
+                <div className="text-slate-400">Awaiting Goal Initialization...</div>
+              )}
+              {gapType === 'planned' && (
+                <div className="space-y-2 text-indigo-300">
+                  <div><span className="text-emerald-400">✓</span> Intent Parsing: "Pass AWS..." detected[cite: 1].</div>
+                  <div><span className="text-emerald-400">✓</span> Baseline Plan Generated: 12 Milestones[cite: 1].</div>
+                  <div><span className="text-amber-400">!</span> New Input: "Vacation" flagged for Days 5-7[cite: 1].</div>
+                  <div><span className="w-2 h-2 bg-indigo-500 rounded-full inline-block animate-pulse mr-2"></span><span className="text-indigo-100 font-semibold">AGENT ACTION:</span> Re-optimizing plan. Workload redistributed. New ETA: Day 32[cite: 1]. No guilt triggered[cite: 1].</div>
+                </div>
+              )}
+              {gapType === 'silent' && (
+                <div className="space-y-2 text-amber-300">
+                  <div><span className="text-emerald-400">✓</span> Learning Confidence: High (Quiz 90%)[cite: 1].</div>
+                  <div><span className="text-amber-400">!</span> Anomaly Detected: 3-day silent inactivity interval[cite: 1].</div>
+                  <div><span className="w-2 h-2 bg-amber-500 rounded-full inline-block animate-pulse mr-2"></span><span className="text-amber-100 font-semibold">AGENT ACTION:</span> Dispatched Contextual Nudge[cite: 1]. Offering resume from exact incomplete topic (IAM Policies)[cite: 1].</div>
+                </div>
+              )}
             </div>
-
-            <div className="space-y-1 max-w-md">
-              <h2 className="text-lg font-bold tracking-tight text-slate-100">
-                {gapMode === 'planned' ? 'Planned Gap Pre-Adjustment Active' : gapMode === 'silent' ? 'Contextual Nudge Dispatched' : 'Continuous Learning Loop Engaged'}
-              </h2>
-              <p className="text-xs text-slate-400 font-mono leading-relaxed">
-                {gapMode === 'planned' 
-                  ? 'Exams flagged in advance. Agent has automatically structured recaps around the break with zero guilt-tripping[cite: 1].' 
-                  : gapMode === 'silent' 
-                  ? 'Inactivity detected. Triggered targeted intervention referencing the exact unfinished module (Subnets)[cite: 1].' 
-                  : 'Real-time intelligence analyzing user intent, tracking honesty metrics, and adapting learning paths[cite: 1].'}
-              </p>
-            </div>
-
-            {/* Live Interactive Simulation Trigger */}
-            <div className="pt-2">
-              <div className="inline-flex items-center space-x-2 bg-indigo-950/80 border border-indigo-700/50 px-4 py-2 rounded-xl text-xs font-mono text-indigo-300 shadow-lg">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                <span>Resilience Score: 92/100 (High Recovery Rate)[cite: 1]</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Bottom Footer HUD */}
-          <div className="relative z-10 flex justify-between items-center text-[10px] font-mono text-slate-500 border-t border-slate-900 pt-4">
-            <div>NODE: IIIT_PUNE_VOLT_TEAM[cite: 1]</div>
-            <div>STATUS: SECURE FEEDBACK LOOP[cite: 1]</div>
           </div>
 
         </div>
 
-      </div>
+        {/* RIGHT COLUMN: Dashboard Metrics */}
+        <div className="space-y-8">
+          
+          {/* Scorecards */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-inner flex flex-col items-center justify-center text-center">
+              <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Honesty Score[cite: 1]</div>
+              <div className="text-5xl font-black text-cyan-400">98<span className="text-3xl text-cyan-600">%</span></div>
+              <div className="w-full bg-slate-800 rounded-full h-2 mt-3"><div className="bg-cyan-500 h-2 rounded-full w-[98%]"></div></div>
+            </div>
+            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-inner flex flex-col items-center justify-center text-center">
+              <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Resilience[cite: 1]</div>
+              <div className="text-5xl font-black text-indigo-400">92</div>
+              <div className="text-sm text-indigo-200">High Recovery[cite: 1]</div>
+            </div>
+          </div>
+
+          {/* Explainable Plan Changes Log */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-black/30">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-emerald-950 rounded-2xl border border-emerald-800"><BarChart3 className="w-7 h-7 text-emerald-400"/></div>
+              <div>
+                <h2 className="text-xl font-bold">Explainable Changes[cite: 1]</h2>
+                <p className="text-slate-400 text-sm">Why the plan changed, and how the agent reasoned through it[cite: 1].</p>
+              </div>
+            </div>
+            <ul className="space-y-4 text-sm font-mono">
+              <li className="flex items-start gap-3 text-emerald-300">
+                <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0 text-emerald-500"/>
+                <span>Goal Initialized: AWS Sol. Architect[cite: 1].</span>
+              </li>
+              <li className="flex items-start gap-3 text-emerald-300">
+                <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0 text-emerald-500"/>
+                <span>Milestone 4 (VPC) re-sequenced after vacation flag[cite: 1].</span>
+              </li>
+              <li className="flex items-start gap-3 text-amber-300">
+                <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0 text-amber-500"/>
+                <span>Nudge sent (Idle Day 3). Reason: Inactivity Threshold Exceeded[cite: 1].</span>
+              </li>
+              <li className="flex items-start gap-3 text-rose-300">
+                <XCircle className="w-5 h-5 mt-0.5 shrink-0 text-rose-500"/>
+                <span>*No guilt trigger activated* (System Lock)[cite: 1].</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Agent Personality Blurb */}
+           <div className="border border-dashed border-slate-700 rounded-3xl p-6 text-center text-slate-600 text-xs hover:border-cyan-800 hover:text-cyan-900 transition cursor-help">
+             An autonomous reasoning partner that observes, understands intent, plans, tracks honesty metrics, nudges contextually, and adapts proactively around human life constraints[cite: 1].
+           </div>
+
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="text-center py-6 text-xs text-slate-700 mt-12 border-t border-slate-800/50">
+        Team Volt - IIIT Pune - Learning Agent System © 2024[cite: 1]
+      </footer>
     </div>
   );
 }
+
+export default App;
