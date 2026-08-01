@@ -10,15 +10,17 @@ export default function App() {
   const [dailyHours, setDailyHours] = useState('2');
   const [totalDays, setTotalDays] = useState('30');
   
-  // Feature 2 Inputs (Planned vs Unplanned Disruptions)
-  const [plannedExams, setPlannedExams] = useState('2'); // e.g. 2 days exam
-  const [unplannedMissed, setUnplannedMissed] = useState(1); // 1 day missed simulation alert
+  // Feature 2 Inputs (Planned vs Unplanned Disruptions - moved to Top Corner Simulation)
+  const [plannedExams, setPlannedExams] = useState('2');
+  const [unplannedMissed, setUnplannedMissed] = useState(0); // Starts at 0 until simulated
+  const [showSimulateModal, setShowSimulateModal] = useState(false);
+  const [tempMissedInput, setTempMissedInput] = useState('2');
 
   // App State & Tracking
   const [activeTab, setActiveTab] = useState('roadmap');
   const [completedDays, setCompletedDays] = useState([1]);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [potentialHours, setPotentialHours] = useState(2); // Dynamic boost from 2 to 3 hrs engagement
+  const [potentialHours, setPotentialHours] = useState(2);
 
   // Feature 5: Camera Engagement & Boredom Detector State
   const [camActive, setCamActive] = useState(false);
@@ -74,6 +76,12 @@ export default function App() {
   const handleGenerateRoadmap = (e) => {
     e.preventDefault();
     if (course) setView('dashboard');
+  };
+
+  const handleApplySimulation = (e) => {
+    e.preventDefault();
+    setUnplannedMissed(parseInt(tempMissedInput) || 0);
+    setShowSimulateModal(false);
   };
 
   const toggleDay = (dayNum) => {
@@ -201,19 +209,19 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 3: FEATURE 1 & FEATURE 2 INPUT */}
+      {/* VIEW 3: FEATURE 1 INPUT (Clean, no unplanned days prompt here) */}
       {view === 'plan-input' && (
-        <div style={{ maxWidth: '500px', margin: '40px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>CUSTOM ROADMAP & DISRUPTION CONFIG</h2>
-          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '25px' }}>Configure your course parameters and account for planned exams or unexpected life gaps.</p>
+        <div style={{ maxWidth: '480px', margin: '40px auto', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '40px', boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', zIndex: 20 }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>CUSTOM ROADMAP CONFIG</h2>
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '25px' }}>Configure your course parameters to build your initial learning track.</p>
 
-          <form onSubmit={handleGenerateRoadmap} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleGenerateRoadmap} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
               <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>WHICH COURSE DO YOU WANNA DO?</label>
               <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="e.g., Full Stack Web Dev / AI Engineer" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} required />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>DAILY HOURS ALLOTED</label>
                 <select value={dailyHours} onChange={e => setDailyHours(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }}>
@@ -230,18 +238,6 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '4px' }}>
-              <div>
-                <label style={{ fontSize: '11px', color: '#38bdf8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>PLANNED EXAM DAYS</label>
-                <input type="number" value={plannedExams} onChange={e => setPlannedExams(e.target.value)} placeholder="e.g. 2" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#38bdf8', fontSize: '13px', boxSizing: 'border-box' }} />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', color: '#fcd34d', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>UNPLANNED GAP SIMULATION</label>
-                <input type="number" value={unplannedMissed} onChange={e => setUnplannedMissed(e.target.value)} placeholder="e.g. 1 day dropped" style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '14px', color: '#fcd34d', fontSize: '13px', boxSizing: 'border-box' }} />
-              </div>
-            </div>
-
             <button type="submit" style={{ background: 'linear-gradient(to right, #6366f1, #06b6d4)', border: 'none', color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 15px 30px -5px rgba(99, 102, 241, 0.5)' }}>
               INITIALIZE ADAPTIVE ROADMAP ENGINE 🚀
             </button>
@@ -253,47 +249,86 @@ export default function App() {
       {view === 'dashboard' && (
         <div style={{ maxWidth: '1100px', margin: '20px auto', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', zIndex: 20, animation: 'fadeInScale 0.6s ease-out' }}>
           
-          {/* Top Status & Camera Telemetry Bar */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '20px' }}>
+          {/* Top Header & Unplanned Simulation Button in Top-Right Corner */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '20px' }}>
+            <div>
               <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'monospace', textTransform: 'uppercase' }}>ACTIVE CLOSED-LOOP VECTOR</span>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#f8fafc', margin: '4px 0' }}>{course.toUpperCase()}</h2>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
                 Target: {totalDays} Days • Initial Intent: {dailyHours} hrs/day • <span style={{ color: '#34d399', fontWeight: 'bold' }}>Boosted Potential: {potentialHours} hrs/day ⚡</span>
               </div>
             </div>
 
-            {/* Feature 5: Camera & Boredom Detector Widget */}
-            <div style={{ background: camActive ? '#090d16' : '#0f172a', border: `1px solid ${boredomAlert ? '#ef4444' : '#1e293b'}`, borderRadius: '16px', padding: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', animation: boredomAlert ? 'pulseGlow 2s infinite' : 'none' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '10px', color: camActive ? '#34d399' : '#94a3b8', fontFamily: 'monospace' }}>CAM ENGAGEMENT AI</span>
-                <button onClick={() => setCamActive(!camActive)} style={{ background: camActive ? '#065f46' : '#334155', border: 'none', color: '#fff', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer' }}>
-                  {camActive ? 'CAM ON 🟢' : 'TURN ON CAM 📷'}
-                </button>
-              </div>
-
-              {camActive ? (
-                <div style={{ fontSize: '11px', marginTop: '8px' }}>
-                  {boredomAlert ? (
-                    <div style={{ color: '#ef4444', fontWeight: 'bold' }}>⚠️ Fatigue Detected! Quick Challenge Unlocked to Keep You Focused!</div>
-                  ) : (
-                    <div style={{ color: '#34d399' }}>✨ Flow State Active • Attention Score: {engagementScore}%</div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ fontSize: '10px', color: '#64748b', marginTop: '6px' }}>Enable camera for real-time boredom & focus adaptation.</div>
-              )}
-            </div>
-          </div>
-
-          {/* Feature 2 Alert Banner: Unplanned Gap & Auto-Recalibration Notice */}
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: '14px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* TOP-RIGHT UNPLANNED DAY SIMULATION TRIGGER BUTTON */}
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fcd34d' }}>⚠️ Unplanned Gap Detected ({unplannedMissed} Day Missed) & Planned Exams ({plannedExams} Days) Integrated</div>
-              <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>Autonomous Engine has auto-revised your roadmap: previous topics queued for quick revision, keeping total completion strict at exactly <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{totalDays} Days</span>!</div>
+              <button 
+                onClick={() => setShowSimulateModal(true)} 
+                style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2))', border: '1px solid #fcd34d', color: '#fcd34d', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', boxShadow: '0 0 15px rgba(245, 158, 11, 0.3)' }}
+              >
+                ⚠️ Simulate Unplanned Gap
+              </button>
             </div>
-            <span style={{ background: '#f59e0b', color: '#020617', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>AUTOPILOT RECALIBRATED</span>
           </div>
+
+          {/* SIMULATION MODAL POPUP */}
+          {showSimulateModal && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+              <div style={{ background: '#0f172a', border: '1px solid #fcd34d', borderRadius: '20px', padding: '30px', width: '380px', boxShadow: '0 25px 50px rgba(0,0,0,0.9)', animation: 'fadeInScale 0.3s ease-out' }}>
+                <h3 style={{ fontSize: '16px', color: '#fcd34d', margin: '0 0 8px 0' }}>⚠️ Simulate Unplanned Disruption</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>Enter how many days you missed due to unexpected life events to trigger autonomous roadmap recalculation.</p>
+                
+                <form onSubmit={handleApplySimulation} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'monospace' }}>MISSED DAYS TO SIMULATE</label>
+                    <input type="number" value={tempMissedInput} onChange={e => setTempMissedInput(e.target.value)} style={{ width: '100%', background: '#020617', border: '1px solid #334155', borderRadius: '10px', padding: '12px', color: '#fcd34d', fontSize: '14px', boxSizing: 'border-box' }} min="1" max="10" required />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                    <button type="submit" style={{ flex: 1, background: '#f59e0b', color: '#020617', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                      Apply & Recalculate ⚡
+                    </button>
+                    <button type="button" onClick={() => setShowSimulateModal(false)} style={{ background: '#334155', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '10px', fontSize: '12px', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Top Status & Camera Telemetry Bar */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+            {/* Feature 5: Camera & Boredom Detector Widget */}
+            <div style={{ background: camActive ? '#090d16' : '#0f172a', border: `1px solid ${boredomAlert ? '#ef4444' : '#1e293b'}`, borderRadius: '16px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: boredomAlert ? 'pulseGlow 2s infinite' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <span style={{ fontSize: '10px', color: camActive ? '#34d399' : '#94a3b8', fontFamily: 'monospace' }}>CAM ENGAGEMENT AI</span>
+                {camActive ? (
+                  <div style={{ fontSize: '11px' }}>
+                    {boredomAlert ? (
+                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>⚠️ Fatigue Detected! Quick Challenge Unlocked to Keep You Focused!</span>
+                    ) : (
+                      <span style={{ color: '#34d399' }}>✨ Flow State Active • Attention Score: {engagementScore}%</span>
+                    )}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Enable camera for real-time boredom & focus adaptation.</span>
+                )}
+              </div>
+              <button onClick={() => setCamActive(!camActive)} style={{ background: camActive ? '#065f46' : '#334155', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer' }}>
+                {camActive ? 'CAM ON 🟢' : 'TURN ON CAM 📷'}
+              </button>
+            </div>
+          </div>
+
+          {/* Feature 2 Dynamic Recalibration Notice (Updates when top-right button is used) */}
+          {unplannedMissed > 0 && (
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: '14px', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: 'fadeInScale 0.4s ease-out' }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fcd34d' }}>⚠️ Unplanned Gap Simulated ({unplannedMissed} Days Missed) Successfully!</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>Autonomous Engine has auto-revised your roadmap: missed modules compressed & queued for quick review, maintaining your exact <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{totalDays}-Day</span> target!</div>
+              </div>
+              <span style={{ background: '#f59e0b', color: '#020617', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>AUTOPILOT RECALIBRATED</span>
+            </div>
+          )}
 
           {/* Navigation Tabs */}
           <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '10px', overflowX: 'auto' }}>
