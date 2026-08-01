@@ -1,251 +1,170 @@
 import React, { useState } from 'react';
-import { Sparkles, BookOpen, Compass, CheckCircle2, AlertCircle, RefreshCw, Layers } from 'lucide-react';
+import { Sparkles, Brain, ShieldAlert, CheckCircle2, AlertCircle, RefreshCw, Calendar, TrendingUp, Sliders } from 'lucide-react';
 
 export default function App() {
-  // States
-  const [step, setStep] = useState(1); // 1: Onboarding, 2: Dashboard
+  const [step, setStep] = useState(1);
   const [goal, setGoal] = useState('');
-  const [scheduleType, setScheduleType] = useState('planned'); // 'planned' or 'unplanned'
-  const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'plan', 'track'
-  const [completedItems, setCompletedItems] = useState([]);
+  const [gapType, setGapType] = useState('none'); // 'none', 'planned', 'silent'
+  const [quizScore, setQuizScore] = useState(85);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Mock Curated Content Database based on goals
-  const curatedFeed = [
-    {
-      id: 1,
-      type: 'Podcast Clip',
-      title: 'How Sam Altman Evaluates Founders in 5 Minutes',
-      duration: '4 min watch',
-      source: 'Y Combinator Podcast',
-      tag: 'Startup & Mindset',
-      summary: 'Learn the exact mental models top investors use to filter high-potential founders.'
-    },
-    {
-      id: 2,
-      type: 'Deep Dive Article',
-      title: 'The Architecture of Autonomous AI Agents',
-      duration: '7 min read',
-      source: 'Substack Tech Brief',
-      tag: 'Technology',
-      summary: 'A breakdown of how multi-agent loops (Understand -> Plan -> Execute) work in real applications.'
-    },
-    {
-      id: 3,
-      type: 'Case Study',
-      title: 'From Zero to 100k Users Without Paid Ads',
-      duration: '5 min read',
-      source: 'Indie Hackers',
-      tag: 'Growth Strategy',
-      summary: 'How community-driven content curation changed organic growth forever.'
-    }
-  ];
-
-  const handleStartJourney = (e) => {
+  // Dynamic state updates based on PPT logic
+  const handleInitialize = (e) => {
     e.preventDefault();
     if (!goal) return;
     setStep(2);
   };
 
-  const toggleComplete = (id) => {
-    if (completedItems.includes(id)) {
-      setCompletedItems(completedItems.filter(item => item !== id));
-    } else {
-      setCompletedItems([...completedItems, id]);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white">
       {/* Navbar */}
-      <nav className="border-b border-slate-800 bg-slate-900/55 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+      <nav className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <Sparkles className="text-indigo-400 w-6 h-6 animate-pulse" />
+          <Brain className="text-indigo-400 w-6 h-6 animate-pulse" />
           <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-            AuraCurate AI
+            HBTM Personal Learning Agent[cite: 1]
           </span>
         </div>
-        <span className="text-xs px-3 py-1 bg-indigo-950/80 border border-indigo-800/50 text-indigo-300 rounded-full">
-          Anti-Attention Economy Engine
+        <span className="text-xs px-3 py-1 bg-indigo-950 border border-indigo-800/50 text-indigo-300 rounded-full font-mono">
+          Team Volt | Closed-Loop Tutor[cite: 1]
         </span>
       </nav>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         {step === 1 ? (
-          /* STEP 1: ONBOARDING / GOAL SETTING */
-          <div className="max-w-xl mx-auto mt-12 bg-slate-900/80 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+          /* STEP 1: GOAL INTAKE & INTENT PARSING */
+          <div className="max-w-xl mx-auto mt-12 bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-extrabold mb-3 tracking-tight">
-                Design Your <span className="text-indigo-400">Future Self</span>
+              <h1 className="text-2xl font-extrabold mb-2">
+                Initialize <span className="text-indigo-400">Personal Learning Agent</span>[cite: 1]
               </h1>
               <p className="text-slate-400 text-sm">
-                Replace mindless scrolling with purposeful knowledge, stories, and ideas curated precisely for your journey.
+                A closed-loop tutor that plans, tracks, nudges, and adapts based on real behavior[cite: 1].
               </p>
             </div>
 
-            <form onSubmit={handleStartJourney} className="space-y-6">
+            <form onSubmit={handleInitialize} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  What is your primary aspiration right now?
+                  What is your learning goal?[cite: 1]
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Become an AI Startup Founder, Master System Design..."
+                  placeholder="e.g., Pass AWS Solutions Architect Exam[cite: 1]"
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  How is your schedule looking this week?
+                  Simulate Real-Life Behavior Gap[cite: 1]:
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
-                    onClick={() => setScheduleType('planned')}
-                    className={`p-4 rounded-xl border text-left transition ${
-                      scheduleType === 'planned'
-                        ? 'border-indigo-500 bg-indigo-950/40 text-indigo-200'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                    onClick={() => setGapType('planned')}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      gapType === 'planned' ? 'border-indigo-500 bg-indigo-950/40 text-indigo-200' : 'border-slate-800 bg-slate-950 text-slate-400'
                     }`}
                   >
-                    <div className="font-semibold text-sm">Steady & Planned</div>
-                    <div className="text-xs text-slate-500 mt-1">15-20 mins daily learning routine</div>
+                    <div className="font-semibold text-xs">Planned Gap</div>
+                    <div className="text-[10px] text-slate-500 mt-1">Exams/Busy days flagged in advance[cite: 1]</div>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setScheduleType('unplanned')}
-                    className={`p-4 rounded-xl border text-left transition ${
-                      scheduleType === 'unplanned'
-                        ? 'border-indigo-500 bg-indigo-950/40 text-indigo-200'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                    onClick={() => setGapType('silent')}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      gapType === 'silent' ? 'border-indigo-500 bg-indigo-950/40 text-indigo-200' : 'border-slate-800 bg-slate-950 text-slate-400'
                     }`}
                   >
-                    <div className="font-semibold text-sm">Busy / Unpredictable</div>
-                    <div className="text-xs text-slate-500 mt-1">Dynamic micro-nukes & adaptive catch-up</div>
+                    <div className="font-semibold text-xs">Silent Gap</div>
+                    <div className="text-[10px] text-slate-500 mt-1">Unexpected inactivity / drop[cite: 1]</div>
                   </button>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center space-x-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center space-x-2"
               >
-                <span>Initialize Growth Agent</span>
+                <span>Build Dynamic Plan</span>
                 <Sparkles className="w-4 h-4" />
               </button>
             </form>
           </div>
         ) : (
-          /* STEP 2: DASHBOARD & CURATED FEED */
+          /* STEP 2: DASHBOARD & EXPLAINABLE PLAN CHANGES */
           <div className="space-y-6">
-            {/* Dynamic Nudge Banner */}
-            <div className="bg-gradient-to-r from-indigo-950/60 to-purple-950/60 border border-indigo-800/40 rounded-2xl p-5 flex items-start space-x-4 shadow-lg">
-              <div className="p-2 bg-indigo-600/20 text-indigo-400 rounded-xl mt-1">
-                {scheduleType === 'planned' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-indigo-200 text-sm">Agent Dynamic Adaptation Active</h3>
-                  <span className="text-xs text-slate-400">Goal: {goal}</span>
-                </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  {scheduleType === 'planned'
-                    ? "Your routine is optimized. Here is your high-value daily knowledge pack to prevent passive scrolling."
-                    : "We noticed an irregular schedule gap. Your plan has been dynamically condensed into high-impact 5-minute micro insights."}
-                </p>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div className="flex space-x-2 border-b border-slate-800 pb-3">
-              <button
-                onClick={() => setActiveTab('feed')}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition flex items-center space-x-2 ${
-                  activeTab === 'feed' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:bg-slate-900'
-                }`}
-              >
-                <Compass className="w-4 h-4" />
-                <span>Curated Growth Feed</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('track')}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition flex items-center space-x-2 ${
-                  activeTab === 'track' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:bg-slate-900'
-                }`}
-              >
-                <Layers className="w-4 h-4" />
-                <span>Progress & Mastery ({completedItems.length}/3)</span>
-              </button>
-            </div>
-
-            {/* Feed Content */}
-            {activeTab === 'feed' ? (
-              <div className="grid gap-4">
-                {curatedFeed.map((item) => {
-                  const isDone = completedItems.includes(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      className={`bg-slate-900/60 border rounded-2xl p-6 transition backdrop-blur-sm flex flex-col justify-between ${
-                        isDone ? 'border-emerald-600/40 bg-emerald-950/10' : 'border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-950 border border-indigo-800/40 text-indigo-300 rounded-lg">
-                            {item.type}
-                          </span>
-                          <span className="text-xs text-slate-400 font-mono">{item.duration}</span>
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-100 mt-1">{item.title}</h3>
-                        <p className="text-sm text-slate-400 mt-2">{item.summary}</p>
-                      </div>
-
-                      <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-800/60">
-                        <span className="text-xs text-slate-500 font-medium">Source: {item.source}</span>
-                        <button
-                          onClick={() => toggleComplete(item.id)}
-                          className={`text-xs px-4 py-2 rounded-xl font-medium transition flex items-center space-x-1.5 ${
-                            isDone
-                              ? 'bg-emerald-600/20 border border-emerald-500/40 text-emerald-300'
-                              : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                          }`}
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{isDone ? 'Completed & Internalized' : 'Mark as Completed'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              /* PROGRESS TRACKER VIEW */
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-                <h3 className="text-lg font-bold mb-4">Your Intentional Growth Stats</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-400">Knowledge Assimilation Rate</span>
-                      <span className="font-mono text-indigo-400">{Math.round((completedItems.length / 3) * 100)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800">
-                      <div
-                        className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${(completedItems.length / 3) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-400 pt-2">
-                    Every piece of content processed reduces attention drift and moves you closer to becoming a {goal}.
-                  </p>
+            
+            {/* Dynamic Status / Nudge Banner based on PPT Differentiators */}
+            {gapType === 'planned' && (
+              <div className="bg-indigo-950/60 border border-indigo-800/60 rounded-2xl p-4 flex items-center space-x-3">
+                <Calendar className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-indigo-200">Planned Gap Active:</span> College exams flagged. Agent has smoothly pre-adjusted milestones with zero guilt-tripping[cite: 1].
                 </div>
               </div>
             )}
+
+            {gapType === 'silent' && (
+              <div className="bg-amber-950/40 border border-amber-800/60 rounded-2xl p-4 flex items-center space-x-3">
+                <ShieldAlert className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-amber-200">Contextual Nudge Triggered:</span> 3 days of unexpected inactivity detected. Referencing exact topic left behind (Subnets)[cite: 1].
+                </div>
+              </div>
+            )}
+
+            {/* Metrics Grid (Confidence Score vs Checkboxes from PPT) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+                <div className="text-xs text-slate-400">Overall Plan Completion[cite: 1]</div>
+                <div className="text-2xl font-bold font-mono text-indigo-400 mt-1">80%[cite: 1]</div>
+                <div className="w-full bg-slate-950 rounded-full h-2 mt-3 border border-slate-800">
+                  <div className="bg-indigo-500 h-1.5 rounded-full w-[80%]"></div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+                <div className="text-xs text-slate-400">Networking Confidence (Quiz Signal)[cite: 1]</div>
+                <div className="text-2xl font-bold font-mono text-amber-400 mt-1">45%[cite: 1]</div>
+                <div className="w-full bg-slate-950 rounded-full h-2 mt-3 border border-slate-800">
+                  <div className="bg-amber-500 h-1.5 rounded-full w-[45%]"></div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+                <div className="text-xs text-slate-400">Resilience Score[cite: 1]</div>
+                <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">92/100</div>
+                <div className="text-[10px] text-slate-500 mt-1">Measures recovery speed after a gap[cite: 1]</div>
+              </div>
+            </div>
+
+            {/* Explainable Plan Changes (Core Differentiator from PPT) */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Sliders className="w-5 h-5 text-indigo-400" />
+                <h3 className="font-bold text-sm text-slate-200">Explainable Plan Changes (Active Feedback Loop)[cite: 1]</h3>
+              </div>
+              <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 space-y-2 text-xs font-mono text-slate-300">
+                <div className="text-indigo-400 font-bold">Plan adjusted because:[cite: 1]</div>
+                <div>• Quiz score on Subnets: 40% (Remedial tasks added)[cite: 1]</div>
+                <div>• Next milestone delayed by 2 days dynamically[cite: 1]</div>
+                <div>• Active State Store updated successfully[cite: 1]</div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setStep(1)}
+              className="text-xs text-indigo-400 hover:underline flex items-center space-x-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Reset & Change Goal</span>
+            </button>
           </div>
         )}
       </main>
