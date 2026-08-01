@@ -21,9 +21,11 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [potentialHours, setPotentialHours] = useState(2);
 
-  // Feature 5: Continuous Camera Engagement & Boredom Detector State
+  // Feature 5: Continuous Camera & 20s Distraction Fun Refresher State
   const [boredomAlert, setBoredomAlert] = useState(false);
   const [engagementScore, setEngagementScore] = useState(94);
+  const [funnyChallengeActive, setFunnyChallengeActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(20);
 
   // Refs for continuous live webcam stream
   const videoRef = useRef(null);
@@ -43,7 +45,18 @@ export default function App() {
     setParticles(pts);
   }, []);
 
-  // Automatically start webcam when dashboard opens, keep it continuous
+  // Text-to-speech speaker helper using laptop speakers
+  const speakMessage = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop previous speech
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.2; // Slightly funny high pitch
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Automatically start webcam when dashboard opens
   useEffect(() => {
     let interval;
     if (view === 'dashboard') {
@@ -64,17 +77,21 @@ export default function App() {
 
       startCameraAutomatically();
 
-      // Simulated AI check loop for boredom/fatigue while dashboard is active
+      // Trigger distraction check loop every 12 seconds
       interval = setInterval(() => {
         const randomEvent = Math.random();
-        if (randomEvent > 0.7) {
+        if (randomEvent > 0.6) {
           setBoredomAlert(true);
-          setEngagementScore(prev => Math.max(60, prev - 15));
+          setFunnyChallengeActive(true);
+          setTimeLeft(20);
+          setEngagementScore(prev => Math.max(50, prev - 20));
+          
+          // Voice speaks out loud from laptop speakers
+          speakMessage("Hey buddy! You look totally distracted! Let's take a 20 second funny brain break right now!");
         } else {
           setBoredomAlert(false);
-          setEngagementScore(prev => Math.min(99, prev + 2));
         }
-      }, 7000);
+      }, 12000);
     }
 
     return () => {
@@ -85,6 +102,21 @@ export default function App() {
       }
     };
   }, [view]);
+
+  // 20-second countdown timer for funny distraction mode
+  useEffect(() => {
+    let timer;
+    if (funnyChallengeActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && funnyChallengeActive) {
+      setFunnyChallengeActive(false);
+      setBoredomAlert(false);
+      speakMessage("Welcome back! Let's crush this roadmap!");
+    }
+    return () => clearInterval(timer);
+  }, [funnyChallengeActive, timeLeft]);
 
   const handleSignIn = (e) => {
     e.preventDefault();
@@ -118,15 +150,12 @@ export default function App() {
   const totalDaysCount = parseInt(totalDays) || 30;
   const baseRoadmapDaysArray = Array.from({ length: Math.min(totalDaysCount, 15) }, (_, i) => i + 1);
 
-  // REVISION-FIRST ENGINE: If unplanned days are simulated, inject a mandatory Revision & Catch-up block FIRST before subsequent new topics start!
   const getDynamicRoadmap = () => {
     if (unplannedMissed <= 0) {
       return baseRoadmapDaysArray.map(d => ({ day: d, type: 'normal', label: `Module Vector ${d}` }));
     }
 
     const compressed = [];
-    
-    // Step 1: Inject Revision / Catch-up days first based on missed gap
     for (let r = 1; r <= unplannedMissed; r++) {
       compressed.push({
         day: r,
@@ -135,7 +164,6 @@ export default function App() {
       });
     }
 
-    // Step 2: Followed immediately by new topics
     let topicCounter = 1;
     for (let i = unplannedMissed + 1; i <= Math.min(15, baseRoadmapDaysArray.length); i++) {
       compressed.push({
@@ -145,7 +173,6 @@ export default function App() {
       });
       topicCounter++;
     }
-
     return compressed;
   };
 
@@ -174,6 +201,12 @@ export default function App() {
           50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
           100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
         }
+        @keyframes wiggle {
+          0% { transform: rotate(0deg); }
+          25% { transform: rotate(-3deg); }
+          75% { transform: rotate(3deg); }
+          100% { transform: rotate(0deg); }
+        }
       `}</style>
 
       {particles.map((p, i) => (
@@ -188,7 +221,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 1: LANDING (No boxes, shadow effect for alphabets) */}
+      {/* VIEW 1: LANDING (No boxes, neon text shadow effect on alphabets) */}
       {view === 'landing' && (
         <div style={{ minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
           
@@ -214,7 +247,7 @@ export default function App() {
             </h1>
 
             <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '30px', marginBottom: '40px', lineHeight: '1.6', textShadow: '0 2px 10px rgba(0,0,0,0.8)', animation: 'fadeInScale 1s ease-out 0.8s both' }}>
-              Autonomous Closed-Loop Learning Engine with Mandatory Revision-First Gap Recovery & Continuous Live Camera Telemetry.
+              Autonomous Closed-Loop Learning Engine with Mandatory Revision-First Gap Recovery & Smart Distraction Refresher.
             </p>
 
             <div style={{ animation: 'fadeInScale 1s ease-out 1s both' }}>
@@ -291,8 +324,44 @@ export default function App() {
       {view === 'dashboard' && (
         <div style={{ maxWidth: '1100px', margin: '20px auto', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', zIndex: 20, animation: 'fadeInScale 0.6s ease-out' }}>
           
+          {/* FLOATING WEBCAM FEED ON RIGHT TOP CORNER */}
+          <div style={{ position: 'fixed', top: '20px', right: '20px', width: '160px', height: '120px', background: '#000', border: `2px solid ${boredomAlert ? '#ef4444' : '#38bdf8'}`, borderRadius: '12px', overflow: 'hidden', zIndex: 150, boxShadow: '0 10px 25px rgba(0,0,0,0.8)' }}>
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} 
+            />
+            <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '8px', color: '#34d399', fontFamily: 'monospace' }}>
+              LIVE CAM 🟢
+            </div>
+          </div>
+
+          {/* FUNNY 20-SECOND DISTRACTION REFRESHER OVERLAY */}
+          {funnyChallengeActive && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 200, animation: 'fadeInScale 0.3s ease-out', textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: '50px', animation: 'wiggle 0.5s infinite' }}>🤪🚨</div>
+              <h2 style={{ fontSize: '28px', color: '#fcd34d', margin: '15px 0 5px 0' }}>BUSTED! YOU ARE DISTRACTED!</h2>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', maxWidth: '400px', marginBottom: '20px' }}>Your AI companion noticed you spacing out! Let's do a quick, funny 20-second brain refresh right now through your laptop speaker!</p>
+              
+              <div style={{ fontSize: '42px', fontWeight: '900', color: '#38bdf8', fontFamily: 'monospace', marginBottom: '25px', textShadow: '0 0 20px rgba(56, 189, 248, 0.6)' }}>
+                {timeLeft}s remaining
+              </div>
+
+              <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '16px', padding: '20px', maxWidth: '450px' }}>
+                <div style={{ fontSize: '13px', color: '#34d399', fontWeight: 'bold', marginBottom: '6px' }}>Quick Fun Challenge:</div>
+                <div style={{ fontSize: '12px', color: '#f8fafc' }}>Blink 3 times super fast, stretch your arms high up, and smile like you just won the lottery! 😄🙌</div>
+              </div>
+
+              <button onClick={() => setFunnyChallengeActive(false)} style={{ marginTop: '25px', background: '#34d399', color: '#020617', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                I'm Refreshed & Ready! ⚡
+              </button>
+            </div>
+          )}
+
           {/* Top Header & Unplanned Simulation Button in Top-Right Corner */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '20px', marginRight: '180px' }}>
             <div>
               <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'monospace', textTransform: 'uppercase' }}>ACTIVE CLOSED-LOOP VECTOR</span>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#f8fafc', margin: '4px 0' }}>{course.toUpperCase()}</h2>
@@ -336,38 +405,6 @@ export default function App() {
               </div>
             </div>
           )}
-
-          {/* Continuous Live Webcam Telemetry Bar & Video Preview Feed */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-            <div style={{ background: '#090d16', border: `1px solid ${boredomAlert ? '#ef4444' : '#1e293b'}`, borderRadius: '16px', padding: '15px 20px', display: 'flex', flexDirection: 'column', gap: '15px', animation: boredomAlert ? 'pulseGlow 2s infinite' : 'none' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <span style={{ fontSize: '10px', color: '#34d399', fontFamily: 'monospace' }}>LIVE CAM ENGAGEMENT AI 🟢</span>
-                  <div style={{ fontSize: '11px' }}>
-                    {boredomAlert ? (
-                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>⚠️ Fatigue Detected! Quick Challenge Unlocked!</span>
-                    ) : (
-                      <span style={{ color: '#34d399' }}>✨ Flow State Active • Attention Score: {engagementScore}%</span>
-                    )}
-                  </div>
-                </div>
-                <span style={{ background: '#065f46', color: '#fff', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold' }}>Streaming Live</span>
-              </div>
-
-              {/* Live Video Feed Container Always Active */}
-              <div style={{ position: 'relative', width: '100%', height: '180px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
-                <video 
-                  ref={videoRef} 
-                  autoPlay 
-                  playsInline 
-                  muted 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} 
-                />
-              </div>
-
-            </div>
-          </div>
 
           {/* REVISION-FIRST NOTICE WHEN UNPLANNED DAYS > 0 */}
           {unplannedMissed > 0 && (
